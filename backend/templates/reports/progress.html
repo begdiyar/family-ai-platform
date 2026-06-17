@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; color: #111827; margin: 40px; }
+  h1 { color: #5B7FA6; font-size: 28px; }
+  .meta { color: #6B7280; font-size: 14px; margin-bottom: 32px; }
+  .footer { margin-top: 48px; color: #9CA3AF; font-size: 12px; border-top: 1px solid #E5E7EB; padding-top: 16px; }
+</style>
+</head>
+<body>
+  <h1>Отчёт прогресса</h1>
+  <div class="meta">
+    Пара: {{ couple.partner_a.first_name }} и {{ couple.partner_b.first_name }}<br>
+    Дата: {{ report.created_at|date:"d.m.Y" }}
+  </div>
+  <p>Отчёт прогресса отражает динамику изменений после прохождения плана восстановления.</p>
+  <div class="footer">
+    Отчёт сгенерирован сервисом «Связь» · Конфиденциально
+  </div>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; color: #111827; margin: 40px; }
+  h1 { color: #5B7FA6; font-size: 28px; margin-bottom: 4px; }
+  h2 { color: #374151; font-size: 18px; margin-top: 32px; border-bottom: 1px solid #E5E7EB; padding-bottom: 8px; }
+  .meta { color: #6B7280; font-size: 14px; margin-bottom: 32px; }
+  .subtitle { color: #9CA3AF; font-size: 16px; margin-bottom: 8px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
+  .stat { background: #F9FAFB; border-radius: 8px; padding: 16px; text-align: center; }
+  .stat-value { font-size: 32px; font-weight: bold; color: #5B7FA6; }
+  .stat-delta-pos { color: #4CAF82; font-size: 16px; font-weight: bold; }
+  .stat-delta-neg { color: #E57373; font-size: 16px; font-weight: bold; }
+  .stat-label { font-size: 12px; color: #6B7280; margin-top: 4px; }
+  .zone { margin-bottom: 12px; padding: 12px 16px; border-left: 4px solid #5B7FA6; background: #F9FAFB; border-radius: 0 8px 8px 0; }
+  .zone-name { font-weight: bold; font-size: 15px; }
+  .zone-score { float: right; font-size: 18px; font-weight: bold; color: #5B7FA6; }
+  .zone-meta { font-size: 13px; color: #6B7280; margin-top: 4px; }
+  .status-strong { border-left-color: #4CAF82; }
+  .status-attention { border-left-color: #E57373; }
+  .status-growth { border-left-color: #F0C274; }
+  .bar-wrap { background: #E5E7EB; border-radius: 4px; height: 6px; margin-top: 8px; }
+  .bar { background: #5B7FA6; border-radius: 4px; height: 6px; }
+  .highlight { background: #EBF0F7; border-radius: 8px; padding: 16px; margin: 24px 0; }
+  .highlight-title { font-weight: bold; color: #5B7FA6; margin-bottom: 8px; }
+  .footer { margin-top: 48px; color: #9CA3AF; font-size: 12px; border-top: 1px solid #E5E7EB; padding-top: 16px; }
+  .clearfix::after { content: ''; display: table; clear: both; }
+</style>
+</head>
+<body>
+  <div class="subtitle">Ежемесячный отчёт</div>
+  <h1>Отчёт за {{ month }}</h1>
+  <div class="meta">
+    Пара: {{ couple.partner_a.first_name }} {% if couple.partner_b %}и {{ couple.partner_b.first_name }}{% endif %}<br>
+    Сформирован: {{ report.created_at|date:"d.m.Y" }}
+  </div>
+
+  <h2>Показатели месяца</h2>
+  <div class="stats-grid">
+    <div class="stat">
+      {% if latest_result %}
+        <div class="stat-value">{{ latest_result.overall_score|floatformat:0 }}%</div>
+        {% if score_delta is not None %}
+          {% if score_delta >= 0 %}
+            <div class="stat-delta-pos">+{{ score_delta }}%</div>
+          {% else %}
+            <div class="stat-delta-neg">{{ score_delta }}%</div>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        <div class="stat-value">—</div>
+      {% endif %}
+      <div class="stat-label">Индекс отношений</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ practice_completions }}</div>
+      <div class="stat-label">Практик выполнено</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ plan_completions }}</div>
+      <div class="stat-label">Заданий плана</div>
+    </div>
+  </div>
+
+  {% if mediation_sessions > 0 %}
+  <div class="highlight">
+    <div class="highlight-title">AI-медиация</div>
+    В этом месяце вы успешно завершили {{ mediation_sessions }} сессию(-и) медиации.
+    Это значит, что вы открыты к диалогу и работаете над конфликтами вместе.
+  </div>
+  {% endif %}
+
+  {% if latest_result %}
+  <h2>Зоны отношений</h2>
+  {% for zone in zones %}
+  <div class="zone status-{{ zone.status }} clearfix">
+    <span class="zone-score">{{ zone.couple_avg|floatformat:0 }}%</span>
+    <div class="zone-name">{{ zone.label }}</div>
+    <div class="zone-meta">
+      Разрыв между партнёрами: {{ zone.gap|floatformat:0 }}%
+      {% if zone.status == 'strong' %} · Сильная зона{% elif zone.status == 'attention' %} · Требует внимания{% else %} · Зона роста{% endif %}
+    </div>
+    <div class="bar-wrap">
+      <div class="bar" style="width: {{ zone.couple_avg|floatformat:0 }}%"></div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if latest_result.bridge_analysis %}
+  <h2>Мост понимания</h2>
+  <div class="highlight">
+    <p>{{ latest_result.bridge_analysis.common_ground }}</p>
+    <p style="margin-top:8px; font-weight: bold; color: #5B7FA6;">Первый шаг: {{ latest_result.bridge_analysis.first_step }}</p>
+  </div>
+  {% endif %}
+
+  {% if latest_result.strengths_summary %}
+  <h2>Сильные стороны пары</h2>
+  <div class="highlight">
+    <div class="highlight-title">{{ latest_result.strengths_summary.headline }}</div>
+    {% for strength in latest_result.strengths_summary.strengths %}
+    <p style="margin:4px 0;">· {{ strength }}</p>
+    {% endfor %}
+    <p style="margin-top:12px; font-style:italic; color:#6B7280;">{{ latest_result.strengths_summary.encouragement }}</p>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <div class="footer">
+    Отчёт сформирован сервисом «Связь» · {{ report.created_at|date:"d.m.Y H:i" }}
+  </div>
+</body>
+</html>

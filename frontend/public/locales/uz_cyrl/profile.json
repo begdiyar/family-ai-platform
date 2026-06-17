@@ -1,0 +1,9 @@
+{
+  "title": "Профил",
+  "name_label": "Исм",
+  "name_placeholder": "Исмингиз",
+  "save_btn": "Сақлаш",
+  "validation_name": "Камида 2 та белги",
+  "toast_updated": "Профил янгиланди",
+  "toast_error": "Профилни янгилашда хатолик"
+}

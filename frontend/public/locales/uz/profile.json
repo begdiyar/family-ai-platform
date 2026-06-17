@@ -1,0 +1,9 @@
+{
+  "title": "Profil",
+  "name_label": "Ism",
+  "name_placeholder": "Ismingiz",
+  "save_btn": "Saqlash",
+  "validation_name": "Kamida 2 ta belgi",
+  "toast_updated": "Profil yangilandi",
+  "toast_error": "Profilni yangilashda xatolik"
+}

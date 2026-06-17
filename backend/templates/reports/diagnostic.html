@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; color: #111827; margin: 40px; }
+  h1 { color: #5B7FA6; font-size: 28px; }
+  h2 { color: #374151; font-size: 18px; margin-top: 32px; }
+  .meta { color: #6B7280; font-size: 14px; margin-bottom: 32px; }
+  .zone { margin-bottom: 16px; padding: 16px; border-left: 4px solid #5B7FA6; background: #F9FAFB; }
+  .zone-name { font-weight: bold; font-size: 16px; }
+  .scores { display: flex; gap: 32px; margin-top: 8px; font-size: 14px; color: #374151; }
+  .bar-wrap { background: #E5E7EB; border-radius: 4px; height: 8px; margin-top: 4px; }
+  .bar { background: #5B7FA6; border-radius: 4px; height: 8px; }
+  .insights { background: #EBF0F7; border-radius: 8px; padding: 16px; margin-top: 32px; }
+  .insight { margin-bottom: 8px; font-size: 14px; }
+  .footer { margin-top: 48px; color: #9CA3AF; font-size: 12px; border-top: 1px solid #E5E7EB; padding-top: 16px; }
+  .status-strong { border-left-color: #4CAF82; }
+  .status-attention { border-left-color: #E57373; }
+  .status-growth { border-left-color: #F0C274; }
+</style>
+</head>
+<body>
+  <h1>Отчёт диагностики</h1>
+  <div class="meta">
+    Пара: {{ couple.partner_a.first_name }} и {{ couple.partner_b.first_name }}<br>
+    Дата: {{ report.created_at|date:"d.m.Y" }}
+  </div>
+
+  {% if result %}
+    <h2>Общий балл: {{ result.overall_score }}%</h2>
+
+    <h2>Результаты по зонам</h2>
+    {% for zone in zones %}
+    <div class="zone status-{{ zone.status }}">
+      <div class="zone-name">{{ zone.label }}</div>
+      <div class="scores">
+        <span>{{ couple.partner_a.first_name }}: {{ zone.partner_a.percent }}%</span>
+        <span>{{ couple.partner_b.first_name }}: {{ zone.partner_b.percent }}%</span>
+        <span>Средний: {{ zone.couple_avg|floatformat:0 }}%</span>
+        <span>Расхождение: {{ zone.gap|floatformat:0 }}%</span>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar" style="width: {{ zone.couple_avg|floatformat:0 }}%"></div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if result.key_insights %}
+    <div class="insights">
+      <h2 style="margin-top:0">Ключевые инсайты</h2>
+      {% for insight in result.key_insights %}
+      <div class="insight">• {{ insight }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+
+  <div class="footer">
+    Отчёт сгенерирован сервисом «Связь» · Конфиденциально
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "title": "Profile",
+  "name_label": "Name",
+  "name_placeholder": "Your name",
+  "save_btn": "Save changes",
+  "validation_name": "At least 2 characters",
+  "toast_updated": "Profile updated",
+  "toast_error": "Failed to update profile"
+}

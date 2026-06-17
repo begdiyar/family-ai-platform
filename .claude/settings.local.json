@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Test-Path *)",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(npx tsc *)",
+      "Bash(curl *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\begdi\\\\diplom-work\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(python manage.py startapp mediation apps/mediation)",
+      "Bash(python manage.py startapp constitution apps/constitution)",
+      "Bash(python manage.py startapp practices apps/practices)",
+      "Bash(npm run *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(& \"C:\\\\Users\\\\begdi\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" --version 2>$null; & \"C:\\\\Users\\\\begdi\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python311\\\\python.exe\" --version 2>$null; & \"C:\\\\Users\\\\begdi\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python310\\\\python.exe\" --version 2>$null)",
+      "PowerShell(py *)",
+      "Bash(npm list *)",
+      "Bash(grep -v \"//\\\\|label-\\\\|aria-label\\\\|className\\\\|htmlFor\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

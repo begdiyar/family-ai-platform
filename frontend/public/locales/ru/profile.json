@@ -1,0 +1,9 @@
+{
+  "title": "Профиль",
+  "name_label": "Имя",
+  "name_placeholder": "Ваше имя",
+  "save_btn": "Сохранить изменения",
+  "validation_name": "Минимум 2 символа",
+  "toast_updated": "Профиль обновлён",
+  "toast_error": "Не удалось обновить профиль"
+}

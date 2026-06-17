@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SANCTUARY DESIGN SYSTEM — Global Styles
+   Палитра: Deep Indigo · Dusty Blue · Muted Sage · Warm Terracotta
+   Ощущение: зрелость, надёжность, тепло, глубина
+───────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    font-size: 18px;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: #E8E2D4;
+    color: #17152A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(60, 56, 136, 0.30);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(60, 56, 136, 0.50);
+  }
+
+  ::selection {
+    background: rgba(60, 56, 136, 0.16);
+    color: #26235E;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.20;
+    letter-spacing: -0.020em;
+    color: #17152A;
+  }
+  h1 { letter-spacing: -0.028em; }
+  h2 { letter-spacing: -0.022em; }
+
+  /* Sidebar — глубокий серо-сине-фиолетовый */
+  aside {
+    background-color: #2E3154;
+    box-shadow: 4px 0 24px rgba(23, 21, 42, 0.16), 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Sidebar scrollbar (light on dark) */
+  aside ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  aside ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.30);
+  }
+}
+
+/* ─── COMPONENTS ───────────────────────────────────────────────────────── */
+@layer components {
+
+  .glass {
+    background: rgba(244, 239, 228, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(244, 239, 228, 0.60);
+  }
+
+  .glass-dark {
+    background: rgba(23, 21, 42, 0.60);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #3C3888 0%, #385C8A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+
+  .text-gradient-warm {
+    background: linear-gradient(135deg, #885040 0%, #3C3888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+
+  .text-gradient-nature {
+    background: linear-gradient(135deg, #386858 0%, #385C8A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.14) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+  }
+
+  .bg-dots-light {
+    background-image: radial-gradient(circle, rgba(60,56,136,0.08) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+
+  /* Карточка — тёплый cream, заметно отличается от фона */
+  .card-base {
+    background: #F4EFE4;
+    border-radius: 24px;
+    box-shadow: 0 2px 12px rgba(23,21,42,0.10), 0 12px 36px rgba(23,21,42,0.12);
+    border: 1px solid rgba(194,184,164,0.70);
+  }
+
+  /* Hero секция страниц */
+  .page-hero {
+    background: linear-gradient(135deg, #E8E2D4 0%, #E6E2F5 100%);
+    border-bottom: 1px solid rgba(60,56,136,0.10);
+  }
+
+  .hero-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+  }
+}
+
+/* ─── UTILITIES ────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* Hover lift — выразительный, с реальной тенью */
+  .lift {
+    transition: transform 0.22s cubic-bezier(0.16,1,0.3,1),
+                box-shadow 0.22s cubic-bezier(0.16,1,0.3,1);
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(60,56,136,0.18), 0 4px 12px rgba(23,21,42,0.10);
+  }
+
+  .font-display {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .label-caps {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(60,56,136,0.16), transparent);
+  }
+
+  .ring-lavender {
+    box-shadow: 0 0 0 3px rgba(60,56,136,0.22);
+  }
+
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Shimmer — заметнее, теплее */
+  .shimmer {
+    background: linear-gradient(90deg, #DDD8C8 25%, #C2B8A4 50%, #DDD8C8 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
