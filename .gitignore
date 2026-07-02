@@ -1,0 +1,39 @@
+# Environment files — never commit real secrets
+backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Django
+backend/staticfiles/
+backend/mediafiles/
+backend/*.log
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
