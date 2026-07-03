@@ -7,6 +7,7 @@ type AuthState = {
   accessToken: string | null
   refreshToken: string | null
   isAuthenticated: boolean
+  _hydrated: boolean
   setAuth: (user: User, tokens: Tokens) => void
   setAccessToken: (token: string) => void
   setUser: (user: User) => void
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      _hydrated: false,
 
       setAuth: (user, tokens) =>
         set({ user, accessToken: tokens.access, refreshToken: tokens.refresh, isAuthenticated: true }),
@@ -41,6 +43,9 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => () => {
+        useAuthStore.setState({ _hydrated: true })
+      },
     },
   ),
 )
