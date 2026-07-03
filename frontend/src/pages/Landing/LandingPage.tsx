@@ -42,7 +42,7 @@ export const LandingPage = () => {
           <span className="text-[15px] font-bold text-ink tracking-tight">Oila AI</span>
         </div>
         <div className="flex items-center gap-2">
-          <LanguageSwitcher />
+          <LanguageSwitcher dropDirection="down" />
           <Link to="/login" className="hidden sm:block">
             <Button variant="ghost" size="sm">{t('cta_login')}</Button>
           </Link>
