@@ -19,7 +19,7 @@ i18n
     fallbackLng: 'ru',
     supportedLngs: SUPPORTED_LANGS.map((l) => l.code),
     preload: SUPPORTED_LANGS.map((l) => l.code),
-    ns: ['common', 'auth', 'dashboard', 'diagnostics', 'analytics', 'index', 'academy', 'practices', 'ai', 'mediation', 'couple', 'profile', 'admin'],
+    ns: ['common', 'auth', 'landing', 'dashboard', 'diagnostics', 'analytics', 'index', 'academy', 'practices', 'ai', 'mediation', 'couple', 'profile', 'admin'],
     defaultNS: 'common',
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',

@@ -17,6 +17,7 @@ import { AdminStatisticsPage } from '@/pages/Admin/AdminStatisticsPage'
 import { AdminExportPage } from '@/pages/Admin/AdminExportPage'
 import { AdminSettingsPage } from '@/pages/Admin/AdminSettingsPage'
 
+import { LandingPage } from '@/pages/Landing/LandingPage'
 import { LoginPage } from '@/pages/Auth/LoginPage'
 import { RegisterPage } from '@/pages/Auth/RegisterPage'
 import { InviteAcceptPage } from '@/pages/Auth/InviteAcceptPage'
@@ -40,7 +41,7 @@ export const router = createBrowserRouter([
     path: '/',
     element: <PublicLayout />,
     children: [
-      { index: true, element: <Navigate to="/login" replace /> },
+      { index: true, element: <LandingPage /> },
       { path: 'login',           element: <LoginPage /> },
       { path: 'register',        element: <RegisterPage /> },
       { path: 'invite/:token',   element: <InviteAcceptPage /> },
