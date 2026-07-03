@@ -41,9 +41,9 @@ export const LandingPage = () => {
           </div>
           <span className="text-[15px] font-bold text-ink tracking-tight">Oila AI</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link to="/login">
+          <Link to="/login" className="hidden sm:block">
             <Button variant="ghost" size="sm">{t('cta_login')}</Button>
           </Link>
           <Link to="/register">
@@ -84,7 +84,8 @@ export const LandingPage = () => {
 
           {/* Headline */}
           <motion.h1 {...fadeUp(0.10)}
-            className="font-display text-5xl md:text-6xl text-ink whitespace-pre-line"
+            className="text-[2rem] leading-tight sm:text-5xl md:text-6xl font-extrabold tracking-tight text-ink"
+            style={{ letterSpacing: '-0.025em' }}
           >
             {t('hero_title').split('\n')[0]}{' '}
             <span className="text-gradient">{t('hero_title').split('\n')[1]}</span>
@@ -112,7 +113,7 @@ export const LandingPage = () => {
           </motion.div>
 
           {/* Trust row */}
-          <motion.div {...fadeUp(0.25)} className="flex flex-col sm:flex-row items-center gap-4 mt-2">
+          <motion.div {...fadeUp(0.25)} className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4 mt-2">
             {[0, 1, 2].map((i) => {
               const Icon = TRUST[i]
               return (
@@ -136,7 +137,7 @@ export const LandingPage = () => {
             transition={{ duration: 0.5, ease }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-ink mb-3">{t('features_title')}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-ink mb-3">{t('features_title')}</h2>
             <p className="text-muted text-balance max-w-md mx-auto">{t('features_subtitle')}</p>
           </motion.div>
 
@@ -186,7 +187,7 @@ export const LandingPage = () => {
                 <Heart size={26} className="text-white" fill="currentColor" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">{t('trust_title')}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{t('trust_title')}</h2>
                 <p className="text-white/70 text-sm">{t('footer_tagline')}</p>
               </div>
               <Link to="/register">
