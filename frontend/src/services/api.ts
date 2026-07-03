@@ -38,7 +38,7 @@ api.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken
 
       try {
-        const { data } = await axios.post('/api/v1/auth/token/refresh/', { refresh: refreshToken })
+        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || '/api/v1'}/auth/token/refresh/`, { refresh: refreshToken })
         useAuthStore.getState().setAccessToken(data.access)
         queue.forEach((cb) => cb(data.access))
         queue = []
