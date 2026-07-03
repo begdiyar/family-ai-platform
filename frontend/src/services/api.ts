@@ -39,7 +39,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post(`${import.meta.env.VITE_API_URL || '/api/v1'}/auth/token/refresh/`, { refresh: refreshToken })
-        useAuthStore.getState().setAccessToken(data.access)
+        useAuthStore.setState({ accessToken: data.access, ...(data.refresh && { refreshToken: data.refresh }) })
         queue.forEach((cb) => cb(data.access))
         queue = []
         original.headers.Authorization = `Bearer ${data.access}`
