@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 class MediationService:
     @staticmethod
     def create_session(user: User, title: str) -> ConflictSession:
-        couple = CoupleRepository.get_active_for_user(user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(user)
         return ConflictSession.objects.create(couple=couple, title=title)
 
     @staticmethod

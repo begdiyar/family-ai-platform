@@ -9,15 +9,14 @@ from .repositories import AnalyticsRepository
 from .serializers import (
     AnalyticsResultShortSerializer,
     AnalyticsResultDetailSerializer,
+    AnalyticsInsightSerializer,
     ProgressHistorySerializer,
 )
 
 
 class AnalyticsResultListView(APIView):
     def get(self, request):
-        couple = CoupleRepository.get_active_for_user(request.user)
-        if not couple:
-            raise NotFoundError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(request.user)
         results = AnalyticsRepository.list_for_couple(couple)
         latest_id = str(results[0].id) if results else None
         serializer = AnalyticsResultShortSerializer(
@@ -28,29 +27,35 @@ class AnalyticsResultListView(APIView):
 
 class AnalyticsResultLatestView(APIView):
     def get(self, request):
-        couple = CoupleRepository.get_active_for_user(request.user)
-        if not couple:
-            raise NotFoundError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(request.user)
         result = AnalyticsRepository.get_latest_for_couple(couple)
         if not result:
             raise NotFoundError('NO_RESULTS_YET', 'Результаты диагностики ещё не готовы')
-        return Response(AnalyticsResultDetailSerializer(result).data)
+        return Response(AnalyticsResultDetailSerializer(result, context={'request': request}).data)
 
 
 class AnalyticsResultDetailView(APIView):
     def get(self, request, result_id):
-        couple = CoupleRepository.get_active_for_user(request.user)
-        if not couple:
-            raise NotFoundError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(request.user)
         result = get_object_or_404(AnalyticsResult, id=result_id, couple=couple)
-        return Response(AnalyticsResultDetailSerializer(result).data)
+        return Response(AnalyticsResultDetailSerializer(result, context={'request': request}).data)
+
+
+class AnalyticsInsightView(APIView):
+    def get(self, request):
+        couple = CoupleRepository.require_full_couple(request.user)
+        result = AnalyticsRepository.get_latest_for_couple(couple)
+        if not result:
+            raise NotFoundError('NO_RESULTS_YET', 'Результаты диагностики ещё не готовы')
+        insight = AnalyticsRepository.get_insight_for_result(result)
+        if not insight:
+            raise NotFoundError('NO_INSIGHT', 'AI-анализ ещё генерируется')
+        return Response(AnalyticsInsightSerializer(insight, context={'request': request}).data)
 
 
 class AnalyticsProgressView(APIView):
     def get(self, request):
-        couple = CoupleRepository.get_active_for_user(request.user)
-        if not couple:
-            raise NotFoundError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(request.user)
         history = AnalyticsRepository.get_history_for_couple(couple)
         return Response({
             'zones': ['communication', 'trust', 'intimacy', 'conflict', 'values', 'future'],

@@ -1,14 +1,13 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  RadialBarChart, RadialBar, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, Tooltip,
+  RadarChart, PolarGrid, PolarAngleAxis, Radar,
+  ResponsiveContainer, Tooltip,
 } from 'recharts'
 import {
-  Heart, AlertOctagon, TrendingUp, TrendingDown, ArrowRight,
-  Sparkles, AlertCircle, ArrowLeftRight,
+  Heart, AlertOctagon, TrendingUp, TrendingDown,
+  Sparkles, Brain, Target, Lightbulb,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AuthService } from '@/services/auth.service'
@@ -24,24 +23,15 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.4, ease, delay },
 })
 
-const ZONE_COLORS: Record<string, { from: string; to: string; light: string }> = {
-  communication: { from: '#2C5678', to: '#385C8A', light: '#DDEAF5' },
-  trust:         { from: '#286250', to: '#385C8A', light: '#D8EDE7' },
-  intimacy:      { from: '#74364A', to: '#3C3888', light: '#EEE0E6' },
-  conflict:      { from: '#744E26', to: '#885040', light: '#EEE2D4' },
-  values:        { from: '#463E80', to: '#3C3888', light: '#E4E0F5' },
-  future:        { from: '#386858', to: '#385C8A', light: '#E2EDE8' },
+const ZONE_META: Record<string, { emoji: string; from: string; to: string; light: string }> = {
+  communication: { emoji: '💬', from: '#2C5678', to: '#385C8A', light: '#DDEAF5' },
+  trust:         { emoji: '🤝', from: '#286250', to: '#385C8A', light: '#D8EDE7' },
+  intimacy:      { emoji: '❤️', from: '#74364A', to: '#3C3888', light: '#EEE0E6' },
+  conflict:      { emoji: '⚡', from: '#744E26', to: '#885040', light: '#EEE2D4' },
+  values:        { emoji: '🌟', from: '#463E80', to: '#3C3888', light: '#E4E0F5' },
+  future:        { emoji: '🔮', from: '#386858', to: '#385C8A', light: '#E2EDE8' },
 }
-const DEFAULT_ZONE = { from: '#3C3888', to: '#385C8A', light: '#EDEAF8' }
-
-const ZONE_GRADIENTS: Record<string, [string, string]> = {
-  communication: ['#2C5678', '#385C8A'],
-  trust:         ['#286250', '#385C8A'],
-  intimacy:      ['#74364A', '#3C3888'],
-  conflict:      ['#744E26', '#885040'],
-  values:        ['#463E80', '#3C3888'],
-  future:        ['#386858', '#385C8A'],
-}
+const DEFAULT_ZONE = { emoji: '○', from: '#3C3888', to: '#385C8A', light: '#EDEAF8' }
 
 const CRISIS_VARIANT = {
   none:     'success' as const,
@@ -49,31 +39,61 @@ const CRISIS_VARIANT = {
   critical: 'danger'  as const,
 }
 
-type Tab = 'index' | 'bridge'
+const STATUS_VARIANT = {
+  strong:    'success' as const,
+  growth:    'warning' as const,
+  attention: 'danger'  as const,
+}
 
 export const RelationshipIndexPage = () => {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('index')
   const { t, i18n } = useTranslation(['index', 'common'])
 
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: AuthService.getMe })
-
   const { data: result, isLoading } = useQuery({
     queryKey: ['analytics', 'latest'],
     queryFn: AnalyticsService.getLatest,
-    enabled: !!me?.couple,
+    enabled: me?.couple?.status === 'active',
     retry: false,
   })
-
+  const { data: insight } = useQuery({
+    queryKey: ['analytics', 'insight'],
+    queryFn: AnalyticsService.getInsight,
+    enabled: me?.couple?.status === 'active' && !!result,
+    retry: false,
+  })
   const { data: listData } = useQuery({
     queryKey: ['analytics', 'list'],
     queryFn: AnalyticsService.list,
-    enabled: !!me?.couple,
+    enabled: me?.couple?.status === 'active',
     retry: false,
+  })
+  const currLevelN = listData?.results?.[0]?.level_number as number | undefined
+  const prevResultId = (listData?.results as any[])?.find(
+    (r: any, i: number) => i > 0 && r.level_number !== currLevelN
+  )?.id as string | undefined
+  const { data: prevResult } = useQuery({
+    queryKey: ['analytics', prevResultId],
+    queryFn: () => AnalyticsService.getById(prevResultId!),
+    enabled: !!prevResultId,
   })
 
   const zoneLabel = (zone: string) => t(`common:zones.${zone}`, { defaultValue: zone })
   const dateLocale = i18n.language === 'en' ? 'en-US' : 'ru-RU'
+
+  if (me?.couple?.status === 'pending') {
+    return (
+      <div className="p-6">
+        <EmptyState
+          icon={<Heart />}
+          title={t('common:pending_couple_title')}
+          description={t('common:invite_partner_first')}
+          actionLabel={t('common:invite_partner_btn')}
+          onAction={() => navigate('/app/couple')}
+        />
+      </div>
+    )
+  }
 
   if (!me?.couple) {
     return (
@@ -91,38 +111,35 @@ export const RelationshipIndexPage = () => {
       }))
     : []
 
-  const score = result ? Math.round(result.overall_score) : 0
-  const crisis = (result?.crisis_level ?? 'none') as keyof typeof CRISIS_VARIANT
-  const crisisVariant = CRISIS_VARIANT[crisis]
+  const score     = result ? Math.round(result.overall_score) : 0
+  const crisis    = (result?.crisis_level ?? 'none') as keyof typeof CRISIS_VARIANT
   const prevScore = historyPoints.length >= 2 ? historyPoints[historyPoints.length - 2]?.score : null
-  const delta = prevScore !== null ? score - prevScore : null
-  const radialData = [{ name: 'score', value: score, fill: 'url(#radGrad)' }]
+  const delta     = prevScore !== null ? score - prevScore : null
 
-  const TabBar = () => (
-    <div className="mx-5 mb-4 flex rounded-2xl p-1" style={{ background: 'rgba(60,56,136,0.08)' }}>
-      {([
-        { key: 'index',  icon: Heart,          label: t('tab_index') },
-        { key: 'bridge', icon: ArrowLeftRight, label: t('tab_bridge') },
-      ] as const).map(({ key, icon: Icon, label }) => (
-        <button
-          key={key}
-          onClick={() => setTab(key)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-[14px] py-2 text-sm font-semibold transition-all duration-200"
-          style={
-            tab === key
-              ? { background: 'white', color: '#3C3888', boxShadow: '0 1px 4px rgba(60,56,136,0.18)' }
-              : { color: '#68647C' }
-          }
-        >
-          <Icon size={13} />
-          {label}
-        </button>
-      ))}
-    </div>
-  )
+  const currLvl = result?.level_number ?? 0
+  const prevLvl = prevResult?.level_number ?? 0
+  const showPrevLayer = !!prevResult && prevLvl !== currLvl
+  const levelLabel = (n: number) => {
+    if (i18n.language === 'en') return `Level ${n}`
+    if (i18n.language.startsWith('uz')) return `${n}-daraja`
+    return `Уровень ${n}`
+  }
+  const KEY_CURR = levelLabel(currLvl)
+  const KEY_PREV = levelLabel(prevLvl)
+
+  const radarData = result?.zone_scores.map((z: any) => {
+    const prevZone = prevResult?.zone_scores.find((pz: any) => pz.zone === z.zone)
+    return {
+      zone: zoneLabel(z.zone),
+      [KEY_CURR]: Math.round(z.couple_avg),
+      ...(showPrevLayer && prevZone ? { [KEY_PREV]: Math.round(prevZone.couple_avg) } : {}),
+    }
+  }) ?? []
 
   return (
     <div className="min-h-full bg-surface pb-24 md:pb-8">
+
+      {/* ── Header ──────────────────────────────────────────────── */}
       <div className="page-hero px-5 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand shadow-[0_4px_12px_rgba(60,56,136,0.28)]">
@@ -135,9 +152,7 @@ export const RelationshipIndexPage = () => {
         </div>
       </div>
 
-      <TabBar />
-
-      <div className="px-4 md:px-5">
+      <div className="px-4 md:px-5 space-y-4">
         {isLoading ? (
           <div className="flex flex-col gap-4">
             {[...Array(4)].map((_, i) => <div key={i} className="h-32 rounded-card shimmer" />)}
@@ -151,338 +166,386 @@ export const RelationshipIndexPage = () => {
             onAction={() => navigate('/app/diagnostics')}
           />
         ) : (
-          <AnimatePresence mode="wait">
-            {tab === 'index' ? (
-              <motion.div
-                key="index"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.22, ease }}
-                className="space-y-4"
+          <>
+
+            {/* ── Hero: score + radar ──────────────────────────── */}
+            <motion.div {...fadeUp(0)}>
+              <div
+                className="rounded-[28px] overflow-hidden"
+                style={{
+                  background: 'linear-gradient(145deg, #EDEAF8 0%, #DDE8F2 55%, #D6E8E2 100%)',
+                  border: '1px solid rgba(60,56,136,0.12)',
+                  boxShadow: '0 8px 32px rgba(60,56,136,0.12)',
+                }}
               >
-                {/* Hero score card */}
-                <div
-                  className="relative overflow-hidden rounded-[28px] p-6"
-                  style={{
-                    background: 'linear-gradient(145deg, #DAD6EE 0%, #D2DDF0 55%, #D6E8E2 100%)',
-                    border: '1px solid rgba(60,56,136,0.12)',
-                    boxShadow: '0 4px 24px rgba(60,56,136,0.10)',
-                  }}
-                >
-                  <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-10 -left-8 h-32 w-32 rounded-full bg-violet/8 blur-2xl pointer-events-none" />
-
-                  <div className="relative flex items-center gap-5">
-                    <div className="relative flex-shrink-0" style={{ width: 110, height: 110 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RadialBarChart
-                          innerRadius="72%" outerRadius="100%"
-                          data={radialData}
-                          startAngle={90}
-                          endAngle={90 - 360 * (score / 100)}
-                        >
-                          <defs>
-                            <linearGradient id="radGrad" x1="0" y1="0" x2="1" y2="1">
-                              <stop offset="0%" stopColor="#3C3888" />
-                              <stop offset="100%" stopColor="#385C8A" />
-                            </linearGradient>
-                          </defs>
-                          <RadialBar dataKey="value" cornerRadius={10} background={{ fill: 'rgba(60,56,136,0.10)' }} />
-                        </RadialBarChart>
-                      </ResponsiveContainer>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-bold text-ink" style={{ letterSpacing: '-0.03em' }}>{score}</span>
-                      </div>
+                {/* Score row */}
+                <div className="px-5 pt-5 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-6xl font-bold" style={{ color: '#3C3888', letterSpacing: '-0.04em' }}>{score}</span>
+                      <span className="text-xl font-semibold text-muted/60">/ 100</span>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-1 mb-2">
-                        <span className="font-display text-5xl text-ink">{score}</span>
-                        <span className="text-xl font-semibold text-muted/60 mb-1">/ 100</span>
-                      </div>
-                      <Badge variant={crisisVariant}>{t(`common:crisis.${crisis}`)}</Badge>
-                      {delta !== null && (
-                        <div className={`mt-2 flex items-center gap-1 text-xs font-semibold ${
-                          delta > 0 ? 'text-sage-700' : delta < 0 ? 'text-danger' : 'text-muted'
-                        }`}>
-                          {delta > 0 ? <TrendingUp size={12} /> : delta < 0 ? <TrendingDown size={12} /> : null}
-                          {delta > 0 ? '+' : ''}{delta} {t('from_last_session')}
-                        </div>
-                      )}
-                      <p className="mt-2 text-[11px] text-muted/70">
-                        {new Date(result.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Crisis block */}
-                {crisis === 'critical' && (
-                  <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4">
-                    <div className="flex items-start gap-3 mb-3">
-                      <AlertOctagon size={18} className="shrink-0 text-rose-600 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-rose-800 text-sm">{t('crisis_critical_title')}</p>
-                        <p className="mt-0.5 text-xs text-rose-600 leading-relaxed">{t('crisis_critical_desc')}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-7">
-                      <Button size="sm" variant="danger" onClick={() => navigate('/app/practices')}>{t('open_plan_btn')}</Button>
-                      <Button size="sm" variant="ghost" onClick={() => navigate('/app/mediation')}>{t('mediator_btn')}</Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Zone cards */}
-                <div>
-                  <p className="label-caps text-muted mb-3 px-1">{t('zones_label')}</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {result.zone_scores.map((z: any, idx: number) => {
-                      const [c1, c2] = ZONE_GRADIENTS[z.zone] ?? ['#3C3888', '#385C8A']
-                      const statusVariant = z.status === 'strong'
-                        ? 'success' : z.status === 'attention' ? 'danger' : 'warning'
-                      const pct = Math.round(z.couple_avg)
-                      return (
-                        <motion.div
-                          key={z.zone}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.35, ease, delay: 0.06 + idx * 0.04 }}
-                          className="rounded-[20px] bg-canvas p-4 border border-sand/60"
-                          style={{ boxShadow: '0 1px 3px rgba(23,21,42,0.04), 0 4px 12px rgba(23,21,42,0.04)' }}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-semibold text-ink">{zoneLabel(z.zone)}</span>
-                            <Badge variant={statusVariant}>{pct}%</Badge>
-                          </div>
-                          <div className="h-2 w-full rounded-full overflow-hidden bg-sand/60">
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${c1}, ${c2})` }}
-                            />
-                          </div>
-                          {z.gap > 15 && (
-                            <p className="mt-2 text-[11px] font-medium text-warning">
-                              {t('gap_bridge_hint', { gap: Math.round(z.gap) })}
-                            </p>
-                          )}
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Strengths */}
-                {result.strengths_summary && (
-                  <div
-                    className="rounded-[20px] p-5"
-                    style={{
-                      background: 'linear-gradient(135deg, #E2EDE8 0%, #DDE8F2 100%)',
-                      border: '1px solid rgba(56,104,88,0.15)',
-                    }}
-                  >
-                    <p className="font-bold text-ink mb-3">
-                      <span className="mr-2">💪</span>
-                      {result.strengths_summary.headline}
+                    <p className="mt-0.5 text-[11px] text-muted">
+                      {new Date(result.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {result.strengths_summary.strengths.map((s: string, i: number) => (
-                        <Badge key={i} variant="success">{s}</Badge>
-                      ))}
-                    </div>
                   </div>
-                )}
-
-                {/* History chart */}
-                {historyPoints.length > 1 && (
-                  <div
-                    className="rounded-[20px] bg-canvas p-5 border border-sand/60"
-                    style={{ boxShadow: '0 1px 3px rgba(23,21,42,0.04), 0 6px 20px rgba(23,21,42,0.05)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-4">
-                      <TrendingUp size={15} className="text-primary" />
-                      <h2 className="font-bold text-ink text-sm">{t('history_label')}</h2>
-                      <span className="ml-auto text-xs text-muted">{historyPoints.length} {t('common:sessions', { defaultValue: 'сессий' })}</span>
-                    </div>
-                    <ResponsiveContainer width="100%" height={130}>
-                      <LineChart data={historyPoints} margin={{ left: -16, right: 4 }}>
-                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#68647C' }} axisLine={false} tickLine={false} />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#68647C' }} axisLine={false} tickLine={false} width={28} />
-                        <Tooltip
-                          formatter={(v: number) => [`${v}%`, t('tooltip_index')]}
-                          contentStyle={{
-                            borderRadius: 16,
-                            border: '1px solid rgba(232,227,218,0.8)',
-                            boxShadow: '0 8px 24px rgba(23,21,42,0.10)',
-                            fontSize: 12, color: '#17152A',
-                          }}
-                        />
-                        <defs>
-                          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#3C3888" />
-                            <stop offset="100%" stopColor="#385C8A" />
-                          </linearGradient>
-                        </defs>
-                        <Line type="monotone" dataKey="score" stroke="url(#lineGrad)" strokeWidth={2.5}
-                          dot={{ fill: '#3C3888', r: 4, strokeWidth: 0 }}
-                          activeDot={{ r: 6, fill: '#385C8A', strokeWidth: 0 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="flex flex-col items-end gap-1.5 mt-1">
+                    <Badge variant={CRISIS_VARIANT[crisis]}>{t(`common:crisis.${crisis}`)}</Badge>
+                    {delta !== null && (
+                      <span className={`flex items-center gap-0.5 text-xs font-semibold ${
+                        delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-muted'
+                      }`}>
+                        {delta > 0 ? <TrendingUp size={11} /> : delta < 0 ? <TrendingDown size={11} /> : null}
+                        {delta > 0 ? '+' : ''}{delta} {t('from_last_session')}
+                      </span>
+                    )}
                   </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-3 pb-2">
-                  <Button variant="secondary" fullWidth onClick={() => navigate(`/app/analytics/${result.id}`)}>
-                    <ArrowRight size={14} /> {t('detail_report_btn')}
-                  </Button>
-                  <Button fullWidth onClick={() => navigate('/app/practices')}>
-                    <Sparkles size={14} /> {t('to_plan_btn')}
-                  </Button>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="bridge"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.22, ease }}
-                className="space-y-4"
-              >
-                {/* Bridge summary */}
-                <div
-                  className="rounded-[22px] p-5 bg-canvas"
-                  style={{ border: '1px solid rgba(60,56,136,0.12)', boxShadow: '0 4px 20px rgba(60,56,136,0.08)' }}
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <Sparkles size={16} className="text-primary" />
-                    <h2 className="font-bold text-ink text-sm">{t('bridge_total_label')}</h2>
-                    <span className="ml-auto text-2xl font-bold" style={{ color: '#3C3888', letterSpacing: '-0.03em' }}>
-                      {score}
-                    </span>
-                    <span className="text-sm text-muted">/ 100</span>
-                  </div>
-                  <div className="relative h-3 rounded-full overflow-hidden bg-sand/60">
-                    <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{ background: 'linear-gradient(90deg, #3C3888, #385C8A, #386858)' }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${score}%` }}
-                      transition={{ duration: 1, ease, delay: 0.15 }}
+
+                {/* Radar chart */}
+                <ResponsiveContainer width="100%" height={230}>
+                  <RadarChart data={radarData} margin={{ top: 8, right: 28, bottom: 8, left: 28 }}>
+                    <PolarGrid stroke="rgba(60,56,136,0.12)" />
+                    <PolarAngleAxis dataKey="zone" tick={{ fill: '#68647C', fontSize: 10 }} />
+                    {showPrevLayer && (
+                      <Radar
+                        name={KEY_PREV}
+                        dataKey={KEY_PREV}
+                        stroke="#5B8DB8"
+                        fill="#5B8DB8"
+                        fillOpacity={0.12}
+                        strokeWidth={1.5}
+                        strokeDasharray="4 3"
+                        dot={{ fill: '#5B8DB8', r: 2.5, strokeWidth: 0 } as any}
+                      />
+                    )}
+                    <Radar
+                      name={KEY_CURR}
+                      dataKey={KEY_CURR}
+                      stroke="#3C3888"
+                      fill="#3C3888"
+                      fillOpacity={0.22}
+                      strokeWidth={2}
+                      dot={{ fill: '#3C3888', r: 3, strokeWidth: 0 } as any}
                     />
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted">
-                    <span>{t('gap_label')}</span>
-                    <span>{t('unity_label')}</span>
-                  </div>
-                </div>
+                    <Tooltip
+                      formatter={(v: number) => [`${v}%`]}
+                      contentStyle={{
+                        borderRadius: 14,
+                        border: '1px solid rgba(232,227,218,0.8)',
+                        boxShadow: '0 8px 24px rgba(23,21,42,0.10)',
+                        fontSize: 12,
+                        color: '#17152A',
+                      }}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
 
-                {/* Zone bridges */}
-                <div>
-                  <p className="label-caps text-muted mb-3 px-1">{t('zones_comparison')}</p>
-                  <div className="space-y-3">
-                    {result.zone_scores.map((z: any, idx: number) => {
-                      const colors = ZONE_COLORS[z.zone] ?? DEFAULT_ZONE
-                      const myScore = Math.round(z.my_score ?? z.couple_avg)
-                      const partnerScore = Math.round(z.partner_score ?? z.couple_avg)
-                      const gap = Math.abs(myScore - partnerScore)
-                      const hasGap = gap > 15
-                      return (
-                        <motion.div
-                          key={z.zone}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.35, ease, delay: 0.06 + idx * 0.05 }}
-                          className="rounded-[20px] bg-canvas p-4"
-                          style={{
-                            border: hasGap ? '1px solid rgba(184,144,74,0.25)' : '1px solid rgba(232,227,218,0.6)',
-                            boxShadow: '0 1px 3px rgba(23,21,42,0.04), 0 4px 12px rgba(23,21,42,0.04)',
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-semibold text-ink">{zoneLabel(z.zone)}</span>
-                            {hasGap && (
-                              <div className="flex items-center gap-1 text-xs font-medium text-warning">
-                                <AlertCircle size={12} />
-                                {t('gap_warning', { gap })}
-                              </div>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">{t('you_label')}</span>
-                                <span className="text-[10px] font-bold" style={{ color: colors.from }}>{myScore}%</span>
-                              </div>
-                              <div className="h-2 rounded-full overflow-hidden bg-sand/60">
-                                <motion.div
-                                  className="h-full rounded-full"
-                                  style={{ background: `linear-gradient(90deg, ${colors.from}, ${colors.to})` }}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${myScore}%` }}
-                                  transition={{ duration: 0.7, ease, delay: 0.1 + idx * 0.05 }}
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">{t('common:partner')}</span>
-                                <span className="text-[10px] font-bold" style={{ color: colors.to }}>{partnerScore}%</span>
-                              </div>
-                              <div className="h-2 rounded-full overflow-hidden bg-sand/60">
-                                <motion.div
-                                  className="h-full rounded-full opacity-70"
-                                  style={{ background: `linear-gradient(90deg, ${colors.to}, ${colors.from})` }}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${partnerScore}%` }}
-                                  transition={{ duration: 0.7, ease, delay: 0.15 + idx * 0.05 }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {hasGap && (
-                            <div
-                              className="mt-3 rounded-[10px] px-3 py-2 text-xs text-warning font-medium"
-                              style={{ background: '#FDF4E8' }}
-                            >
-                              {t('gap_discuss')}
-                            </div>
-                          )}
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Strengths */}
-                {result.strengths_summary && (
-                  <div
-                    className="rounded-[20px] p-5"
-                    style={{ background: 'linear-gradient(135deg, #E2EDE8 0%, #DDE8F2 100%)', border: '1px solid rgba(56,104,88,0.15)' }}
-                  >
-                    <p className="font-bold text-ink mb-1">
-                      <span className="mr-2">🤝</span>
-                      {result.strengths_summary.headline}
-                    </p>
-                    <p className="text-xs text-muted leading-relaxed mt-1">{t('common_ground_note')}</p>
+                {/* Legend */}
+                {showPrevLayer && (
+                  <div className="flex justify-center gap-6 px-5 pb-5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-6 rounded-full flex-shrink-0" style={{ background: '#5B8DB8', opacity: 0.7 }} />
+                      <span className="text-xs text-muted">{KEY_PREV}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-6 rounded-full flex-shrink-0" style={{ background: '#3C3888' }} />
+                      <span className="text-xs font-semibold" style={{ color: '#3C3888' }}>{KEY_CURR}</span>
+                    </div>
                   </div>
                 )}
+              </div>
+            </motion.div>
 
-                {/* CTA */}
-                <div className="flex gap-3 pb-2">
-                  <Button variant="secondary" fullWidth onClick={() => navigate('/app/ai')}>
-                    <Sparkles size={14} /> {t('discuss_ai_btn')}
-                  </Button>
-                  <Button fullWidth onClick={() => navigate('/app/mediation')}>
-                    {t('open_mediator_btn')}
-                  </Button>
+            {/* ── Crisis block ─────────────────────────────────── */}
+            {crisis === 'critical' && (
+              <motion.div {...fadeUp(0.06)}>
+                <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <AlertOctagon size={18} className="shrink-0 text-rose-600 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-rose-800 text-sm">{t('crisis_critical_title')}</p>
+                      <p className="mt-0.5 text-xs text-rose-600 leading-relaxed">{t('crisis_critical_desc')}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-7">
+                    <Button size="sm" variant="danger" onClick={() => navigate('/app/practices')}>{t('open_plan_btn')}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => navigate('/app/mediation')}>{t('mediator_btn')}</Button>
+                  </div>
                 </div>
               </motion.div>
             )}
-          </AnimatePresence>
+
+            {/* ── Zone cards ───────────────────────────────────── */}
+            <motion.div {...fadeUp(0.10)}>
+              <p className="label-caps text-muted mb-3 px-1">{t('zones_label')}</p>
+              <div className="space-y-2.5">
+                {result.zone_scores.map((z: any, idx: number) => {
+                  const meta = ZONE_META[z.zone] ?? DEFAULT_ZONE
+                  const pct  = Math.round(z.couple_avg)
+                  return (
+                    <motion.div
+                      key={z.zone}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, ease, delay: 0.12 + idx * 0.05 }}
+                      className="rounded-[20px] bg-white p-4"
+                      style={{ border: '1px solid rgba(232,227,218,0.7)', boxShadow: '0 2px 8px rgba(23,21,42,0.04)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Icon */}
+                        <div
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] text-xl"
+                          style={{ background: meta.light }}
+                        >
+                          {meta.emoji}
+                        </div>
+
+                        {/* Label + badge */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm font-bold text-ink">{zoneLabel(z.zone)}</span>
+                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                              <Badge variant={STATUS_VARIANT[z.status as keyof typeof STATUS_VARIANT] ?? 'warning'}>
+                                {t(`common:zone_status.${z.status}`)}
+                              </Badge>
+                              <span className="text-sm font-bold" style={{ color: meta.from }}>{pct}%</span>
+                            </div>
+                          </div>
+                          {/* Progress bar */}
+                          <div className="h-1.5 w-full rounded-full overflow-hidden bg-sand/60">
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ background: `linear-gradient(90deg, ${meta.from}, ${meta.to})` }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.8, ease, delay: 0.15 + idx * 0.05 }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </motion.div>
+
+            {/* ── AI Insight Report ────────────────────────────── */}
+            {insight ? (
+              <>
+                {/* Block 3: AI-анализ отношений */}
+                <motion.div {...fadeUp(0.36)}>
+                  <div
+                    className="rounded-[20px] p-5"
+                    style={{
+                      background: 'linear-gradient(145deg, #F0EEF9 0%, #EAF1F9 100%)',
+                      border: '1px solid rgba(60,56,136,0.12)',
+                      boxShadow: '0 2px 12px rgba(60,56,136,0.08)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <Brain size={15} className="text-primary" />
+                      <p className="text-sm font-bold text-ink">{t('ai_report_label')}</p>
+                    </div>
+
+                    {/* Three summary pills */}
+                    <div className="space-y-2.5 mb-4">
+                      {insight.strengths_summary && (
+                        <div className="rounded-[12px] px-4 py-3" style={{ background: 'rgba(56,104,88,0.08)', border: '1px solid rgba(56,104,88,0.14)' }}>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-success mb-1">{t('ai_strengths_label')}</p>
+                          <p className="text-xs text-ink/75 leading-relaxed">{insight.strengths_summary}</p>
+                        </div>
+                      )}
+                      {insight.growth_summary && (
+                        <div className="rounded-[12px] px-4 py-3" style={{ background: 'rgba(116,78,38,0.07)', border: '1px solid rgba(116,78,38,0.14)' }}>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-warning mb-1">{t('ai_growth_label')}</p>
+                          <p className="text-xs text-ink/75 leading-relaxed">{insight.growth_summary}</p>
+                        </div>
+                      )}
+                      {insight.attention_summary && (
+                        <div className="rounded-[12px] px-4 py-3" style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.12)' }}>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-danger mb-1">{t('ai_attention_label')}</p>
+                          <p className="text-xs text-ink/75 leading-relaxed">{insight.attention_summary}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Main analysis */}
+                    {insight.ai_analysis && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2">{t('ai_analysis_label')}</p>
+                        <p className="text-sm text-ink/80 leading-relaxed">{insight.ai_analysis}</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                {/* Block 4: Следующий фокус развития */}
+                {insight.next_focus && (
+                  <motion.div {...fadeUp(0.40)}>
+                    <div
+                      className="rounded-[20px] p-5"
+                      style={{
+                        background: 'linear-gradient(145deg, #EAF0F9 0%, #E4EBF5 100%)',
+                        border: '1px solid rgba(56,92,138,0.14)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Target size={15} style={{ color: '#385C8A' }} />
+                        <p className="text-sm font-bold text-ink">{t('next_focus_label')}</p>
+                      </div>
+                      <p className="text-sm text-ink/75 leading-relaxed">{insight.next_focus}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Block 5: Рекомендация AI */}
+                {insight.recommendation && (
+                  <motion.div {...fadeUp(0.44)}>
+                    <div
+                      className="rounded-[20px] p-5"
+                      style={{
+                        background: 'linear-gradient(145deg, #FDFCFF 0%, #F5F3FB 100%)',
+                        border: '1px solid rgba(60,56,136,0.12)',
+                        boxShadow: '0 2px 8px rgba(23,21,42,0.04)',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Lightbulb size={15} className="text-primary" />
+                        <p className="text-sm font-bold text-ink">{t('recommendation_label')}</p>
+                      </div>
+                      <p className="text-sm text-ink/80 leading-relaxed">{insight.recommendation}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </>
+            ) : result && (
+              <motion.div {...fadeUp(0.36)}>
+                <div
+                  className="rounded-[20px] px-5 py-4 flex items-center gap-3"
+                  style={{ background: '#F5F3FB', border: '1px solid rgba(60,56,136,0.10)' }}
+                >
+                  <Brain size={16} className="text-primary/50 shrink-0" />
+                  <p className="text-sm text-muted">{t('ai_generating')}</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Key insights ─────────────────────────────────── */}
+            {result.key_insights?.length > 0 && (
+              <motion.div {...fadeUp(0.42)}>
+                <div
+                  className="rounded-[20px] bg-white p-5"
+                  style={{ border: '1px solid rgba(232,227,218,0.7)', boxShadow: '0 2px 8px rgba(23,21,42,0.04)' }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles size={15} className="text-primary" />
+                    <p className="text-sm font-bold text-ink">{t('key_insights_label')}</p>
+                  </div>
+                  <ul className="flex flex-col gap-2.5">
+                    {result.key_insights.map((kInsight: string, i: number) => (
+                      <li key={i} className="flex gap-2.5 text-sm text-ink/80 leading-relaxed">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        {kInsight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Common ground (safe part of bridge_analysis) ─── */}
+            {result.bridge_analysis?.common_ground && (
+              <motion.div {...fadeUp(0.44)}>
+                <div
+                  className="rounded-[20px] p-5"
+                  style={{
+                    background: 'linear-gradient(145deg, #E2EDE8 0%, #DDE8F2 100%)',
+                    border: '1px solid rgba(56,104,88,0.15)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">🌿</span>
+                    <p className="text-sm font-bold text-ink">{t('common_ground_label')}</p>
+                  </div>
+                  <p className="text-sm text-ink/75 leading-relaxed">{result.bridge_analysis.common_ground}</p>
+                  {result.bridge_analysis.first_step && (
+                    <div
+                      className="mt-3 rounded-[12px] px-4 py-3"
+                      style={{ background: 'rgba(56,104,88,0.10)', border: '1px solid rgba(56,104,88,0.15)' }}
+                    >
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-success mb-1">{t('first_step_label')}</p>
+                      <p className="text-xs text-ink/70 leading-relaxed">{result.bridge_analysis.first_step}</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Strengths ────────────────────────────────────── */}
+            {result.strengths_summary && (
+              <motion.div {...fadeUp(0.50)}>
+                <div
+                  className="rounded-[20px] p-5"
+                  style={{
+                    background: 'linear-gradient(145deg, #F5F3FB 0%, #EFF4FB 100%)',
+                    border: '1px solid rgba(60,56,136,0.10)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">💪</span>
+                    <p className="text-sm font-bold text-ink">{result.strengths_summary.headline}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {result.strengths_summary.strengths.map((s: string, i: number) => (
+                      <Badge key={i} variant="success">{s}</Badge>
+                    ))}
+                  </div>
+                  {result.strengths_summary.encouragement && (
+                    <p className="text-xs text-muted leading-relaxed">{result.strengths_summary.encouragement}</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Problem chain ────────────────────────────────── */}
+            {result.problem_chain && result.problem_chain.length > 0 && (
+              <motion.div {...fadeUp(0.54)}>
+                <p className="label-caps text-muted mb-3 px-1">{t('problem_chain_label')}</p>
+                <div
+                  className="rounded-[20px] bg-white p-4"
+                  style={{ border: '1px solid rgba(232,227,218,0.7)', boxShadow: '0 2px 8px rgba(23,21,42,0.04)' }}
+                >
+                  <div className="space-y-3">
+                    {result.problem_chain.map((item: any, idx: number) => (
+                      <div key={idx} className="flex gap-3">
+                        <div
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white mt-0.5"
+                          style={{ background: 'linear-gradient(135deg, #3C3888, #385C8A)' }}
+                        >
+                          {item.step}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-ink">{item.problem}</p>
+                          {item.description && (
+                            <p className="text-xs text-muted mt-0.5 leading-relaxed">{item.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Actions ──────────────────────────────────────── */}
+            <motion.div {...fadeUp(0.62)} className="pb-2">
+              <Button fullWidth onClick={() => navigate('/app/practices')}>
+                <Sparkles size={14} /> {t('to_plan_btn')}
+              </Button>
+            </motion.div>
+
+          </>
         )}
       </div>
     </div>

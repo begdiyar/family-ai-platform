@@ -29,6 +29,7 @@ export const CouplePage = () => {
   const { t, i18n } = useTranslation('couple')
   const [joinMode, setJoinMode] = useState(false)
   const [linkInput, setLinkInput] = useState('')
+  const [joinFromPending, setJoinFromPending] = useState(false)
 
   const dateLocale = i18n.language === 'en' ? 'en-US' : 'ru-RU'
 
@@ -65,7 +66,30 @@ export const CouplePage = () => {
   })
 
   const copyLink = (link: string) => {
-    navigator.clipboard.writeText(link).then(() => toast.success(t('toast_link_copied')))
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link)
+        .then(() => toast.success(t('toast_link_copied')))
+        .catch(() => copyFallback(link))
+    } else {
+      copyFallback(link)
+    }
+  }
+
+  const copyFallback = (link: string) => {
+    const el = document.createElement('textarea')
+    el.value = link
+    el.style.position = 'fixed'
+    el.style.opacity = '0'
+    document.body.appendChild(el)
+    el.focus()
+    el.select()
+    try {
+      document.execCommand('copy')
+      toast.success(t('toast_link_copied'))
+    } catch {
+      toast.error(t('toast_copy_error', { defaultValue: 'Скопируйте ссылку вручную' }))
+    }
+    document.body.removeChild(el)
   }
 
   const handleJoin = () => {
@@ -225,6 +249,39 @@ export const CouplePage = () => {
               <Button variant="secondary" onClick={() => qc.invalidateQueries({ queryKey: ['couple'] })}>
                 {t('common:btn.retry', { defaultValue: 'Обновить' })}
               </Button>
+            )}
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-sand/60" />
+              <span className="text-xs text-muted">{t('common:or', { defaultValue: 'или' })}</span>
+              <div className="h-px flex-1 bg-sand/60" />
+            </div>
+
+            {!joinFromPending ? (
+              <button
+                onClick={() => setJoinFromPending(true)}
+                className="mt-3 w-full text-sm text-primary font-medium text-center hover:underline"
+              >
+                {t('join_title')}
+              </button>
+            ) : (
+              <div className="mt-3 flex flex-col gap-3">
+                <Input
+                  value={linkInput}
+                  onChange={(e) => setLinkInput(e.target.value)}
+                  placeholder="http://localhost:5173/invite/..."
+                  onKeyDown={(e: any) => e.key === 'Enter' && handleJoin()}
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <Button variant="ghost" onClick={() => { setJoinFromPending(false); setLinkInput('') }} className="flex-1">
+                    {t('back_btn')}
+                  </Button>
+                  <Button onClick={handleJoin} loading={joinMutation.isPending} disabled={!linkInput.trim()} className="flex-1">
+                    {t('join_submit_btn')}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

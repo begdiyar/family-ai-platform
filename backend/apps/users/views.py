@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 
+from .models import CommunicationPreference
 from .serializers import (
     RegisterSerializer, LoginSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     LogoutSerializer, UserProfileSerializer, UserUpdateSerializer,
+    CommunicationPreferenceSerializer, ChangePasswordSerializer,
 )
 from .services import AuthService, TokenService
 from .repositories import UserRepository
@@ -82,3 +84,25 @@ class MeView(APIView):
         serializer.is_valid(raise_exception=True)
         user = UserRepository.update(request.user, **serializer.validated_data)
         return Response(UserProfileSerializer(user, context={'request': request}).data)
+
+
+class ChangePasswordView(APIView):
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data['new_password'])
+        request.user.save(update_fields=['password'])
+        return Response({'message': 'Пароль успешно изменён'})
+
+
+class CommunicationPreferenceView(APIView):
+    def get(self, request):
+        pref, _ = CommunicationPreference.objects.get_or_create(user=request.user)
+        return Response(CommunicationPreferenceSerializer(pref).data)
+
+    def patch(self, request):
+        pref, _ = CommunicationPreference.objects.get_or_create(user=request.user)
+        serializer = CommunicationPreferenceSerializer(pref, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(CommunicationPreferenceSerializer(pref).data)

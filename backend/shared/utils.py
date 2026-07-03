@@ -3,7 +3,7 @@ import string
 from django.utils import timezone
 from datetime import timedelta
 
-SUPPORTED_LANGUAGES = {'ru', 'en', 'uz', 'uz_cyrl'}
+SUPPORTED_LANGUAGES = {'ru', 'en', 'uz'}
 
 
 def generate_token(length: int = 48) -> str:
@@ -19,6 +19,11 @@ def get_request_language(request) -> str:
     lang = (
         request.headers.get('X-Language')
         or request.META.get('HTTP_X_LANGUAGE')
+        or (
+            getattr(request.user, 'preferred_language', None)
+            if hasattr(request, 'user') and getattr(request.user, 'is_authenticated', False)
+            else None
+        )
         or 'ru'
     )
     return lang if lang in SUPPORTED_LANGUAGES else 'ru'

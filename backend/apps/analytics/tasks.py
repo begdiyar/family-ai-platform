@@ -7,9 +7,14 @@ logger = logging.getLogger(__name__)
 @app.task(bind=True, max_retries=3, default_retry_delay=60)
 def calculate_analytics(self, couple_id: str):
     try:
+        logger.info("INSIGHT-1: calculate_analytics started for couple %s", couple_id)
         from .services import AnalyticsService
         result = AnalyticsService.calculate(couple_id)
+        logger.info("INSIGHT-2: AnalyticsService.calculate() returned result %s", result.id)
         generate_ai_insights.delay(str(result.id))
+        logger.info("INSIGHT-3: generate_ai_insights.delay() called")
+        generate_analytics_insight.delay(str(result.id))
+        logger.info("INSIGHT-4: generate_analytics_insight.delay() called")
         logger.info(f"Analytics calculated for couple {couple_id}, result {result.id}")
 
         # AI-обогащение: мост понимания, сильные стороны, карта проблем
@@ -35,6 +40,24 @@ def calculate_analytics(self, couple_id: str):
         return str(result.id)
     except Exception as exc:
         logger.error(f"Analytics calculation failed for couple {couple_id}: {exc}")
+        raise self.retry(exc=exc)
+
+
+@app.task(bind=True, max_retries=2, default_retry_delay=60)
+def generate_analytics_insight(self, result_id: str):
+    logger.info("INSIGHT-5: generate_analytics_insight task started for result %s", result_id)
+    try:
+        from .repositories import AnalyticsRepository
+        from .services import AnalyticsInsightService
+        result = AnalyticsRepository.get_by_id(result_id)
+        if not result:
+            logger.warning("INSIGHT-6a: result NOT FOUND for id %s", result_id)
+            return
+        logger.info("INSIGHT-6: result fetched ok, calling generate()")
+        AnalyticsInsightService.generate(result)
+        logger.info("INSIGHT-7: generate() returned — done for result %s", result_id)
+    except Exception as exc:
+        logger.error(f'Analytics insight generation failed for result {result_id}: {exc}')
         raise self.retry(exc=exc)
 
 

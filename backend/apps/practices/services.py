@@ -1,194 +1,491 @@
-import json
 import logging
-from datetime import date
+import random
+from datetime import date, timedelta
+from typing import Optional, Union
+
 from apps.users.models import User
 from apps.couples.repositories import CoupleRepository
 from shared.exceptions import BusinessLogicError
-from shared.utils import get_i18n
-from .models import DailyPractice, PracticeCompletion
+from .models import (
+    Practice, DailyAssignment, AssignmentSlot, FamilyDevelopmentPlan,
+    COMPLETABLE_SLOTS, SLOT_ORDER, FAMILY_LEVELS, STAGE_BY_LEVEL,
+)
 
 logger = logging.getLogger(__name__)
 
-PRACTICE_FIELDS = [
-    'question_of_day', 'conversation_topic', 'trust_exercise',
-    'communication_exercise', 'family_activity', 'romantic_idea',
-]
+# ── Academy article auto-link ─────────────────────────────────────────────────
 
-DEFAULT_PRACTICES = {
-    'ru': [
-        {
-            'question_of_day': 'Что сделало тебя счастливым сегодня — даже самое маленькое?',
-            'conversation_topic': 'Расскажите друг другу о вашей самой любимой совместной памяти',
-            'trust_exercise': 'Скажи партнёру одну вещь, которую ты боишься, но доверяешь ему это знать',
-            'communication_exercise': '5 минут без телефонов — просто смотрите друг на друга и говорите',
-            'family_activity': 'Приготовьте вместе одно блюдо, которое давно хотели попробовать',
-            'romantic_idea': 'Напишите партнёру записку с тремя причинами, почему вы рады быть с ним',
-        },
-        {
-            'question_of_day': 'Что я могу сделать для тебя завтра, чтобы твой день стал лучше?',
-            'conversation_topic': 'Какой была ваша первая встреча с точки зрения каждого из вас?',
-            'trust_exercise': 'Поделись одной мечтой, о которой редко говоришь вслух',
-            'communication_exercise': 'Активное слушание: 10 минут один говорит, другой только слушает без советов',
-            'family_activity': 'Посмотрите вместе фотографии из начала ваших отношений',
-            'romantic_idea': 'Обнимите друг друга на 20 секунд прямо сейчас',
-        },
-    ],
-    'en': [
-        {
-            'question_of_day': 'What made you happy today — even the smallest thing?',
-            'conversation_topic': 'Tell each other about your favorite shared memory',
-            'trust_exercise': 'Tell your partner one thing you are afraid of but trust them to know',
-            'communication_exercise': '5 minutes without phones — just look at each other and talk',
-            'family_activity': 'Cook together a dish you have been wanting to try for a long time',
-            'romantic_idea': 'Write your partner a note with three reasons you are glad to be with them',
-        },
-        {
-            'question_of_day': 'What can I do for you tomorrow to make your day better?',
-            'conversation_topic': 'What was your first meeting like from each of your perspectives?',
-            'trust_exercise': 'Share one dream you rarely say out loud',
-            'communication_exercise': 'Active listening: 10 minutes — one talks, the other only listens without giving advice',
-            'family_activity': 'Look together at photos from the beginning of your relationship',
-            'romantic_idea': 'Hug each other for 20 seconds right now',
-        },
-    ],
-    'uz': [
-        {
-            'question_of_day': "Bugun sizni nima baxtli qildi — hatto eng kichik narsa ham?",
-            'conversation_topic': "Bir-biringizga eng sevimli umumiy xotirangiz haqida gapirib bering",
-            'trust_exercise': "Turmush o'rtoqingizga qo'rqadigan, lekin unga ishonib aytadigan bir narsangizni ayting",
-            'communication_exercise': "5 daqiqa telefonsiz — shunchaki bir-biringizga qarab gaplashing",
-            'family_activity': "Uzoq vaqtdan beri tatib ko'rmoqchi bo'lgan taomni birga pishiring",
-            'romantic_idea': "Turmush o'rtoqingizga u bilan birga bo'lishdan mamnunligingizning uch sababini yozib bering",
-        },
-        {
-            'question_of_day': "Ertaga kuningizni yaxshilash uchun siz uchun nima qila olaman?",
-            'conversation_topic': "Birinchi uchrashuvingiz har biringiz nuqtai nazaridan qanday edi?",
-            'trust_exercise': "Kamdan-kam ovoz chiqarib aytadigan bir orzuingizni ulashing",
-            'communication_exercise': "Faol tinglash: 10 daqiqa — biri gapiradi, ikkinchisi maslahat bermay faqat tinglaydi",
-            'family_activity': "Munosabatingiz boshidan qolgan fotosuratlarni birga tomosha qiling",
-            'romantic_idea': "Hoziroq 20 soniya bir-biringizni quchoqlang",
-        },
-    ],
-    'uz_cyrl': [
-        {
-            'question_of_day': "Бугун сизни нима бахтли қилди — ҳатто энг кичик нарса ҳам?",
-            'conversation_topic': "Бир-биringizga энг севимли умумий хотирангиз ҳақида гапириб беринг",
-            'trust_exercise': "Турмуш ўртоғингизга қўрқадиган, лекин унга ишониб айтадиган бир нарсангизни айтинг",
-            'communication_exercise': "5 дақиқа телефонсиз — шунчаки бир-биringizga қараб гаплашинг",
-            'family_activity': "Узоқ вақтдан бери татиб кўрмоқчи бўлган таомни бирга пиширинг",
-            'romantic_idea': "Турмуш ўртоғингизга у билан бирга бўлишдан мамнунлигингизнинг уч сабабини ёзиб беринг",
-        },
-        {
-            'question_of_day': "Эртага куningizni яхшилаш учун сиз учун нима қила оламан?",
-            'conversation_topic': "Биринчи учрашувингиз ҳар биringiz нуқтаи назаридан қандай эди?",
-            'trust_exercise': "Камдан-кам овоз чиқариб айтадиган бир орзуingizni улашинг",
-            'communication_exercise': "Фаол тинглаш: 10 дақиқа — бири гапиради, иккинчиси маслаҳат бермай фақат тинглайди",
-            'family_activity': "Муносабатингиз бошидан қолган фотосуратларни бирга томоша қилинг",
-            'romantic_idea': "Ҳозироқ 20 сония бир-биringizni қучоқланг",
-        },
-    ],
+PRACTICE_TO_ACADEMY_CATEGORY: dict[str, str] = {
+    'communication': 'communication',
+    'trust':         'trust',
+    'intimacy':      'intimacy',
+    'romance':       'love',
+    'gratitude':     'love',
+    'finances':      'finance',
+    'relatives':     'communication',
+    'children':      'parenting',
 }
 
 
-class DailyPracticeService:
+def _auto_link_academy_article(practice: Practice) -> None:
+    if practice.academy_article_id:
+        return
+    from apps.academy.models import Article
+    academy_cat = PRACTICE_TO_ACADEMY_CATEGORY.get(practice.category)
+    if not academy_cat:
+        return
+    article = Article.objects.filter(category=academy_cat, is_published=True).first()
+    if article:
+        Practice.objects.filter(pk=practice.pk).update(academy_article=article)
+        practice.academy_article_id = article.pk
+        practice.academy_article = article
+
+
+# ── Category selection ────────────────────────────────────────────────────────
+
+ZONE_TO_CATEGORIES: dict[str, list[str]] = {
+    'communication': ['communication', 'trust'],
+    'trust':         ['trust', 'intimacy'],
+    'intimacy':      ['intimacy', 'romance'],
+    'conflict':      ['communication', 'trust'],
+    'values':        ['gratitude', 'romance'],
+    'future':        ['finances', 'relatives'],
+}
+
+DEFAULT_CATEGORIES = ['communication', 'gratitude', 'romance']
+
+SLOT_PREFERRED_CATEGORIES: dict[str, Optional[list[str]]] = {
+    'main':         None,
+    'conversation': ['communication', 'trust', 'intimacy'],
+    'gesture':      ['romance', 'gratitude'],
+    'activity':     None,
+    'ritual':       ['romance', 'gratitude', 'intimacy'],
+    'growth':       None,
+}
+
+
+# ── Level helpers ─────────────────────────────────────────────────────────────
+
+def _level_row(level: int) -> tuple:
+    for row in FAMILY_LEVELS:
+        if row[2] == level:
+            return row
+    return FAMILY_LEVELS[-1]
+
+
+def _level_info_for_plan(plan: FamilyDevelopmentPlan) -> dict:
+    row = _level_row(plan.current_level)
+    min_v, max_v, level, label, emoji = row
+    if max_v >= 9999:
+        xp_current  = plan.total_completed - min_v
+        xp_for_next = 0
+        progress    = 100
+    else:
+        span        = max_v - min_v + 1
+        xp_current  = max(0, plan.total_completed - min_v)
+        xp_for_next = span
+        progress    = round(xp_current / span * 100)
+    stage_data = STAGE_BY_LEVEL.get(level, (1, 'Восстановление связи', '🌱'))
+    return {
+        'level':         level,
+        'label':         label,
+        'emoji':         emoji,
+        'xp_current':   xp_current,
+        'xp_for_next':  xp_for_next,
+        'progress_pct': progress,
+        'stage':        stage_data[0],
+        'stage_name':   stage_data[1],
+        'stage_emoji':  stage_data[2],
+    }
+
+
+# ── Service ───────────────────────────────────────────────────────────────────
+
+class PracticeService:
+
+    # ── Public API ────────────────────────────────────────────────────────────
+
     @staticmethod
-    def get_today(user: User, language: str = 'ru') -> DailyPractice | None:
-        couple = CoupleRepository.get_active_for_user(user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+    def get_today(user: User) -> Union[dict, tuple]:
+        """
+        Returns:
+          dict  — if diagnostics gate blocks (requires_diagnostics: True)
+          (DailyAssignment, FamilyDevelopmentPlan) — normal case
+        """
+        couple = CoupleRepository.require_full_couple(user)
+
+        gate = PracticeService._check_diagnostics_gate(couple)
+        if gate:
+            return gate
+
+        plan  = PracticeService._get_or_create_plan(couple)
         today = date.today()
-        practice = DailyPractice.objects.filter(couple=couple, date=today).first()
-        if not practice:
-            practice = DailyPracticeService.generate_for_couple(couple, today)
-        return practice
+        assignment, created = DailyAssignment.objects.get_or_create(couple=couple, date=today)
+        existing_slots = set(
+            AssignmentSlot.objects.filter(assignment=assignment).values_list('slot_type', flat=True)
+        )
+        if created or not existing_slots:
+            PracticeService._fill_assignment(couple, assignment, plan)
+
+        assignment = (
+            DailyAssignment.objects
+            .prefetch_related('slots__practice', 'slots__practice__academy_article')
+            .get(pk=assignment.pk)
+        )
+        return assignment, plan
 
     @staticmethod
-    def generate_for_couple(couple, target_date: date) -> DailyPractice:
+    def complete_slot(user: User, assignment_id: str, slot: str) -> Union[dict, tuple]:
+        if slot not in COMPLETABLE_SLOTS:
+            raise BusinessLogicError(
+                'INVALID_SLOT',
+                f'Допустимые слоты: {", ".join(COMPLETABLE_SLOTS)}',
+            )
+        couple = CoupleRepository.require_full_couple(user)
         try:
-            return DailyPracticeService._generate_ai(couple, target_date)
-        except Exception as e:
-            logger.warning(f"AI practice generation failed, using default: {e}")
-            return DailyPracticeService._generate_default(couple, target_date)
+            assignment = DailyAssignment.objects.get(id=assignment_id, couple=couple)
+        except DailyAssignment.DoesNotExist:
+            raise BusinessLogicError('NOT_FOUND', 'Задание не найдено')
+        try:
+            slot_obj = AssignmentSlot.objects.get(assignment=assignment, slot_type=slot)
+        except AssignmentSlot.DoesNotExist:
+            raise BusinessLogicError('NOT_FOUND', 'Слот не найден')
+
+        if not slot_obj.completed:
+            from django.utils import timezone
+            slot_obj.completed    = True
+            slot_obj.completed_at = timezone.now()
+            slot_obj.save(update_fields=['completed', 'completed_at', 'updated_at'])
+            PracticeService._increment_plan(couple)
+
+        plan = PracticeService._get_or_create_plan(couple)
+        assignment = (
+            DailyAssignment.objects
+            .prefetch_related('slots__practice', 'slots__practice__academy_article')
+            .get(pk=assignment.pk)
+        )
+        return assignment, plan
 
     @staticmethod
-    def _generate_ai(couple, target_date: date) -> DailyPractice:
-        from apps.ai_consultant.providers import AIProviderFactory
+    def get_plan(user: User) -> Union[dict, FamilyDevelopmentPlan]:
+        couple = CoupleRepository.require_full_couple(user)
+        gate = PracticeService._check_diagnostics_gate(couple)
+        if gate:
+            return gate
+        return PracticeService._get_or_create_plan(couple)
 
-        name_a = couple.partner_a.first_name
-        name_b = couple.partner_b.first_name if couple.partner_b else 'партнёр'
+    @staticmethod
+    def get_stats(user: User) -> dict:
+        couple = CoupleRepository.require_full_couple(user)
 
-        context = ""
-        from apps.analytics.repositories import AnalyticsRepository
-        result = AnalyticsRepository.get_latest_for_couple(couple)
-        if result:
-            from apps.analytics.services import AnalyticsService
-            zones = AnalyticsService.get_zone_detail_for_result(result)
-            attention = [z['label'] for z in zones if z['status'] == 'attention']
-            if attention:
-                context = f"\nФокус на зонах: {', '.join(attention[:2])}"
-
-        prompt = f"""Создай ежедневные семейные практики для пары {name_a} и {name_b} на {target_date.strftime('%d.%m.%Y')}.{context}
-
-Практики должны быть тёплыми, конкретными, реалистичными (занять не больше 20 минут).
-
-Верни JSON со всеми 4 языками:
-{{
-  "ru": {{
-    "question_of_day": "Вопрос для глубокого разговора",
-    "conversation_topic": "Тема для разговора",
-    "trust_exercise": "Упражнение на доверие (конкретное действие)",
-    "communication_exercise": "Упражнение на коммуникацию (конкретное действие)",
-    "family_activity": "Семейная активность (что делать вместе)",
-    "romantic_idea": "Романтическая идея (небольшой жест)"
-  }},
-  "en": {{ ... то же самое на английском ... }},
-  "uz": {{ ... то же самое на узбекском латиницей ... }},
-  "uz_cyrl": {{ ... то же самое на узбекском кириллицей ... }}
-}}"""
-
-        provider = AIProviderFactory.get()
-        response = provider.complete([
-            {'role': 'system', 'content': 'Верни только валидный JSON с ключами ru, en, uz, uz_cyrl.'},
-            {'role': 'user', 'content': prompt},
-        ])
-        start, end = response.find('{'), response.rfind('}') + 1
-        if start < 0 or end <= start:
-            raise ValueError('Invalid JSON response')
-
-        data = json.loads(response[start:end])
-        ru_data = data.get('ru', {})
-
-        return DailyPractice.objects.create(
-            couple=couple,
-            date=target_date,
-            is_ai_generated=True,
-            i18n={lang: data[lang] for lang in ('en', 'uz', 'uz_cyrl') if lang in data},
-            **{k: ru_data.get(k, '') for k in PRACTICE_FIELDS}
+        slots_qs = (
+            AssignmentSlot.objects
+            .filter(assignment__couple=couple, slot_type__in=COMPLETABLE_SLOTS)
+            .select_related('practice')
         )
 
-    @staticmethod
-    def _generate_default(couple, target_date: date) -> DailyPractice:
-        idx = target_date.toordinal() % len(DEFAULT_PRACTICES['ru'])
-        ru_data = DEFAULT_PRACTICES['ru'][idx]
-        i18n_data = {
-            lang: DEFAULT_PRACTICES[lang][idx]
-            for lang in ('en', 'uz', 'uz_cyrl')
+        total_slots     = slots_qs.count()
+        total_completed = slots_qs.filter(completed=True).count()
+
+        category_stats: dict = {}
+        for slot in slots_qs:
+            if not slot.practice:
+                continue
+            cat       = slot.practice.category
+            cat_label = slot.practice.get_category_display()
+            if cat not in category_stats:
+                category_stats[cat] = {'label': cat_label, 'assigned': 0, 'completed': 0}
+            category_stats[cat]['assigned'] += 1
+            if slot.completed:
+                category_stats[cat]['completed'] += 1
+
+        fav = max(
+            category_stats,
+            key=lambda c: category_stats[c]['completed'],
+            default=None,
+        )
+
+        streak = PracticeService._calc_streak(couple)
+
+        # Use plan for level info if available
+        plan = FamilyDevelopmentPlan.objects.filter(couple=couple).first()
+        if plan:
+            level_info = _level_info_for_plan(plan)
+        else:
+            level_info = _level_info_for_plan(
+                FamilyDevelopmentPlan(couple=couple, total_completed=total_completed)
+            )
+
+        return {
+            'total_completed':   total_completed,
+            'total_slots':       total_slots,
+            'completion_rate':   round(total_completed / total_slots * 100) if total_slots else 0,
+            'current_streak':    streak,
+            'favorite_category': fav,
+            'category_progress': category_stats,
+            'family_level':      level_info,
         }
-        practice, _ = DailyPractice.objects.get_or_create(
-            couple=couple, date=target_date,
-            defaults={**ru_data, 'is_ai_generated': False, 'i18n': i18n_data}
-        )
-        return practice
 
     @staticmethod
-    def mark_complete(user: User, practice: DailyPractice, field_name: str) -> None:
-        allowed = set(PRACTICE_FIELDS)
-        if field_name not in allowed:
-            raise BusinessLogicError('INVALID_FIELD', 'Неверное поле практики')
-        PracticeCompletion.objects.get_or_create(practice=practice, user=user, field_name=field_name)
+    def get_history(user: User, limit: int = 14) -> list:
+        couple = CoupleRepository.require_full_couple(user)
+        return list(
+            DailyAssignment.objects
+            .filter(couple=couple)
+            .prefetch_related('slots__practice', 'slots__practice__academy_article')
+            .order_by('-date')[:limit]
+        )
 
     @staticmethod
-    def get_completions(user: User, practice: DailyPractice) -> set:
-        return set(
-            PracticeCompletion.objects.filter(practice=practice, user=user).values_list('field_name', flat=True)
+    def update_plan_from_analytics(couple, analytics_result) -> None:
+        """Called after analytics are calculated to refresh zone priorities."""
+        try:
+            from apps.analytics.services import AnalyticsService
+            zones = AnalyticsService.get_zone_detail_for_result(analytics_result)
+            weak  = sorted(
+                zones,
+                key=lambda z: z['couple_avg'],
+            )
+
+            priority  = weak[0]['zone'] if len(weak) > 0 else 'communication'
+            secondary = weak[1]['zone'] if len(weak) > 1 else 'trust'
+            tertiary  = weak[2]['zone'] if len(weak) > 2 else 'intimacy'
+
+            from django.utils import timezone
+            now  = timezone.now()
+            plan, created = FamilyDevelopmentPlan.objects.get_or_create(couple=couple)
+
+            if created:
+                count = AssignmentSlot.objects.filter(
+                    assignment__couple=couple,
+                    slot_type__in=COMPLETABLE_SLOTS,
+                    completed=True,
+                ).count()
+                plan.total_completed = count
+
+            plan.priority_zone     = priority
+            plan.secondary_zone    = secondary
+            plan.tertiary_zone     = tertiary
+            plan.last_diagnostic_at = now
+            plan.next_diagnostic_at = now + timedelta(days=14)
+            plan.recalculate_level()
+            plan.save()
+        except Exception:
+            logger.exception('update_plan_from_analytics failed')
+
+    # ── Internal ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _check_diagnostics_gate(couple) -> Optional[dict]:
+        from apps.diagnostics.repositories import DiagnosticRepository, JourneyRepository
+
+        # Определяем текущий уровень семьи из FamilyJourney
+        journey = JourneyRepository.get_for_couple(couple)
+        if not journey:
+            # Journey ещё не создан — создаём и требуем диагностику уровня 1
+            JourneyRepository.get_or_create(couple)
+            return {
+                'requires_diagnostics': True,
+                'partner_a_done': False,
+                'partner_b_done': False,
+                'current_level': 1,
+                'locked': True,
+                'reason': 'waiting_partner',
+            }
+
+        current_level = journey.max_unlocked_level
+        status = DiagnosticRepository.get_couple_completion_status(couple, current_level)
+
+        if status['partner_a_completed'] and status['partner_b_completed']:
+            return None  # доступ разрешён
+
+        reason = 'waiting_partner' if status['partner_a_completed'] else 'not_started'
+        return {
+            'requires_diagnostics': True,
+            'locked': True,
+            'reason': reason,
+            'current_level': current_level,
+            'partner_a_done': status['partner_a_completed'],
+            'partner_b_done': status['partner_b_completed'],
+        }
+
+    @staticmethod
+    def _get_or_create_plan(couple) -> FamilyDevelopmentPlan:
+        plan, created = FamilyDevelopmentPlan.objects.get_or_create(couple=couple)
+        if created:
+            count = AssignmentSlot.objects.filter(
+                assignment__couple=couple,
+                slot_type__in=COMPLETABLE_SLOTS,
+                completed=True,
+            ).count()
+            plan.total_completed = count
+            plan.recalculate_level()
+            plan.save()
+        return plan
+
+    @staticmethod
+    def _increment_plan(couple) -> None:
+        from django.db.models import F
+        updated = FamilyDevelopmentPlan.objects.filter(couple=couple).update(
+            total_completed=F('total_completed') + 1,
         )
+        if updated:
+            plan = FamilyDevelopmentPlan.objects.get(couple=couple)
+            old_level = plan.current_level
+            plan.recalculate_level()
+            plan.save(update_fields=['current_level', 'current_stage', 'updated_at'])
+
+            # Проверяем разблокировку следующего уровня диагностики при смене XP-уровня
+            if plan.current_level != old_level:
+                try:
+                    from apps.diagnostics.services import JourneyService
+                    JourneyService.check_and_unlock_next_level(couple)
+                except Exception:
+                    logger.warning("Failed to unlock next diagnostics level for couple %s", couple.id, exc_info=True)
+
+    @staticmethod
+    def _fill_assignment(couple, assignment: DailyAssignment, plan: Optional[FamilyDevelopmentPlan] = None) -> None:
+        categories  = PracticeService._get_target_categories(couple, plan)
+        exclude_ids = PracticeService._get_recent_ids(couple, assignment.date)
+
+        slots_to_create = []
+        for slot_type in SLOT_ORDER:
+            preferred = SLOT_PREFERRED_CATEGORIES.get(slot_type)
+            pick_cats = preferred if preferred else categories
+            practice  = PracticeService._pick(slot_type, pick_cats, exclude_ids)
+            if practice:
+                exclude_ids.add(str(practice.pk))
+                if slot_type == 'growth':
+                    _auto_link_academy_article(practice)
+            slots_to_create.append(
+                AssignmentSlot(
+                    assignment=assignment,
+                    slot_type=slot_type,
+                    practice=practice,
+                    completed=False,
+                )
+            )
+
+        AssignmentSlot.objects.bulk_create(slots_to_create, ignore_conflicts=True)
+        assignment.categories_used = categories
+        assignment.save(update_fields=['categories_used', 'updated_at'])
+
+    @staticmethod
+    def _get_target_categories(couple, plan: Optional[FamilyDevelopmentPlan] = None) -> list[str]:
+        # Use plan priority zones if available
+        if plan and plan.priority_zone:
+            cats: list[str] = []
+            for zone in [plan.priority_zone, plan.secondary_zone, plan.tertiary_zone]:
+                if not zone:
+                    continue
+                for cat in ZONE_TO_CATEGORIES.get(zone, []):
+                    if cat not in cats:
+                        cats.append(cat)
+                if len(cats) >= 3:
+                    break
+            if cats:
+                return cats[:3]
+
+        # Fallback: compute from latest analytics
+        try:
+            from apps.analytics.repositories import AnalyticsRepository
+            from apps.analytics.services import AnalyticsService
+            result = AnalyticsRepository.get_latest_for_couple(couple)
+            if not result:
+                return list(DEFAULT_CATEGORIES)
+
+            zones = AnalyticsService.get_zone_detail_for_result(result)
+            weak  = sorted(
+                [z for z in zones if z['couple_avg'] < 60],
+                key=lambda z: z['couple_avg'],
+            )
+
+            cats = []
+            for z in weak:
+                for cat in ZONE_TO_CATEGORIES.get(z['zone'], []):
+                    if cat not in cats:
+                        cats.append(cat)
+                if len(cats) >= 3:
+                    break
+
+            return cats[:3] if cats else ['gratitude', 'romance', 'intimacy']
+        except Exception:
+            logger.exception('Could not get analytics for practice selection')
+            return list(DEFAULT_CATEGORIES)
+
+    @staticmethod
+    def _get_recent_ids(couple, today: date) -> set:
+        cutoff = today - timedelta(days=30)
+        ids = (
+            AssignmentSlot.objects
+            .filter(
+                assignment__couple=couple,
+                assignment__date__gte=cutoff,
+                assignment__date__lt=today,
+            )
+            .exclude(practice__isnull=True)
+            .values_list('practice_id', flat=True)
+        )
+        return {str(pid) for pid in ids}
+
+    @staticmethod
+    def _pick(slot_type: str, categories: list[str], exclude_ids: set) -> Optional[Practice]:
+        base = Practice.objects.filter(is_active=True, slot_type=slot_type)
+
+        q = base.filter(category__in=categories)
+        if exclude_ids:
+            q = q.exclude(id__in=list(exclude_ids))
+        p = PracticeService._random(q)
+        if p:
+            return p
+
+        q2 = base
+        if exclude_ids:
+            q2 = q2.exclude(id__in=list(exclude_ids))
+        p2 = PracticeService._random(q2)
+        if p2:
+            return p2
+
+        return PracticeService._random(base)
+
+    @staticmethod
+    def _random(qs) -> Optional[Practice]:
+        count = qs.count()
+        if count == 0:
+            return None
+        return qs[random.randint(0, count - 1)]
+
+    @staticmethod
+    def _calc_streak(couple) -> int:
+        today = date.today()
+        completed_dates = set(
+            AssignmentSlot.objects
+            .filter(
+                assignment__couple=couple,
+                slot_type__in=COMPLETABLE_SLOTS,
+                completed=True,
+            )
+            .values_list('assignment__date', flat=True)
+            .distinct()
+        )
+        streak = 0
+        for i in range(365):
+            if (today - timedelta(days=i)) in completed_dates:
+                streak += 1
+            elif i > 0:
+                break
+        return streak
+
+    @staticmethod
+    def _empty_stats() -> dict:
+        from .models import FamilyDevelopmentPlan
+        dummy = FamilyDevelopmentPlan(total_completed=0, current_level=1, current_stage=1)
+        return {
+            'total_completed':   0,
+            'total_slots':       0,
+            'completion_rate':   0,
+            'current_streak':    0,
+            'favorite_category': None,
+            'category_progress': {},
+            'family_level':      _level_info_for_plan(dummy),
+        }

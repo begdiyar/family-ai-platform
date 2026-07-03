@@ -1,5 +1,7 @@
 {
-  "title": "Tekshiruv tarixi",
+  "title": "Tahlil",
+  "subtitle": "Tekshiruv tarixi",
+  "level_badge": "{{n}}-daraja",
   "latest_badge": "So'nggi",
   "score_label": "Umumiy ball",
   "detail_link": "Batafsil tahlil",

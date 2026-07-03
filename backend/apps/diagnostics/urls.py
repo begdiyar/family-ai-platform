@@ -1,10 +1,14 @@
 from django.urls import path
-from .views import QuestionsView, SessionCreateView, CurrentSessionView, SaveAnswersView, CompleteSessionView
+from .views import (
+    QuestionsView, SessionCreateView, CurrentSessionView,
+    SaveAnswersView, CompleteSessionView, JourneyView,
+)
 
 urlpatterns = [
-    path('questions/', QuestionsView.as_view(), name='diagnostics-questions'),
-    path('sessions/', SessionCreateView.as_view(), name='diagnostics-session-create'),
-    path('sessions/current/', CurrentSessionView.as_view(), name='diagnostics-session-current'),
-    path('sessions/<uuid:session_id>/answers/', SaveAnswersView.as_view(), name='diagnostics-save-answers'),
-    path('sessions/<uuid:session_id>/complete/', CompleteSessionView.as_view(), name='diagnostics-complete'),
+    path('journey/',                                       JourneyView.as_view()),
+    path('questions/',                                     QuestionsView.as_view()),
+    path('sessions/',                                      SessionCreateView.as_view()),
+    path('sessions/current/',                              CurrentSessionView.as_view()),
+    path('sessions/<uuid:session_id>/answers/',            SaveAnswersView.as_view()),
+    path('sessions/<uuid:session_id>/complete/',           CompleteSessionView.as_view()),
 ]

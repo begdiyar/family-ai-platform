@@ -4,10 +4,9 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import HttpBackend from 'i18next-http-backend'
 
 export const SUPPORTED_LANGS = [
-  { code: 'ru',      label: 'RU', name: 'Русский' },
-  { code: 'uz',      label: 'UZ', name: "O'zbekcha" },
-  { code: 'uz_cyrl', label: 'ЎЗ', name: 'Ўзбекча' },
-  { code: 'en',      label: 'EN', name: 'English' },
+  { code: 'ru', label: 'RU', name: 'Русский' },
+  { code: 'uz', label: 'UZ', name: "O'zbekcha" },
+  { code: 'en', label: 'EN', name: 'English' },
 ] as const
 
 export type LangCode = (typeof SUPPORTED_LANGS)[number]['code']
@@ -20,7 +19,7 @@ i18n
     fallbackLng: 'ru',
     supportedLngs: SUPPORTED_LANGS.map((l) => l.code),
     preload: SUPPORTED_LANGS.map((l) => l.code),
-    ns: ['common', 'auth', 'dashboard', 'diagnostics', 'analytics', 'index', 'academy', 'practices', 'ai', 'mediation', 'couple', 'profile'],
+    ns: ['common', 'auth', 'dashboard', 'diagnostics', 'analytics', 'index', 'academy', 'practices', 'ai', 'mediation', 'couple', 'profile', 'admin'],
     defaultNS: 'common',
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { AcademyService } from '@/services/academy.service'
 import { Button } from '@/components/ui/Button'
+import { celebrateMedium } from '@/lib/confetti'
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const fadeUp = (delay = 0) => ({
@@ -81,6 +82,7 @@ export const TrainingDetailPage = () => {
   const completeMutation = useMutation({
     mutationFn: () => AcademyService.completeTraining(slug!, reflection),
     onSuccess: () => {
+      celebrateMedium()
       qc.invalidateQueries({ queryKey: ['academy-training', slug] })
       qc.invalidateQueries({ queryKey: ['academy-trainings'] })
       qc.invalidateQueries({ queryKey: ['academy-progress'] })

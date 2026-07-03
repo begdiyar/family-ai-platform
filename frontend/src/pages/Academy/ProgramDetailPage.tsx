@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { AcademyService } from '@/services/academy.service'
 import { Button } from '@/components/ui/Button'
+import { celebrateSmall, celebrateBig } from '@/lib/confetti'
 import type { ProgramDayItem } from '@/types/domain.types'
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
@@ -198,11 +199,16 @@ export const ProgramDetailPage = () => {
   const completeDayMutation = useMutation({
     mutationFn: ({ day, reflection }: { day: number; reflection: string }) =>
       AcademyService.completeProgramDay(slug!, day, reflection),
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['academy-program', slug] })
       qc.invalidateQueries({ queryKey: ['academy-active-program'] })
       qc.invalidateQueries({ queryKey: ['academy-progress'] })
       toast.success(t('toast_day_done', { defaultValue: 'День засчитан!' }))
+      if (data?.program_completed) {
+        setTimeout(() => celebrateBig(), 100)
+      } else {
+        celebrateSmall()
+      }
       setCompletingDay(null)
     },
   })

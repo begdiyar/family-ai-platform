@@ -1,10 +1,43 @@
+export type CommunicationPreference = {
+  conflict_style: string
+  conflict_style_label: string
+  support_style: string
+  support_style_label: string
+  updated_at: string
+}
+
+export type Child = {
+  id: string
+  birth_date: string
+  gender: string
+  gender_label: string
+  created_at: string
+}
+
+export type FamilyValue = {
+  slug: string
+  label_ru: string
+}
+
 export type User = {
   id: string
   email: string
   first_name: string
+  last_name: string
+  birth_date: string | null
+  gender: string
+  gender_label: string
+  native_language: string
+  occupation: string
+  education_level: string
+  education_level_label: string
   avatar_url: string | null
+  preferred_language: string
   is_verified: boolean
+  is_staff: boolean
+  is_superuser: boolean
   couple: CoupleShort | null
+  communication_pref: CommunicationPreference | null
   created_at: string
 }
 
@@ -21,9 +54,22 @@ export type Couple = {
   partner_b: Partner | null
   diagnostics_status: { partner_a_completed: boolean; partner_b_completed: boolean }
   invite: Invite | null
+  // relationship
+  relationship_status: string
+  relationship_status_label: string
+  relationship_start_date: string | null
+  marriage_date: string | null
+  // legacy
   has_children: boolean
   children_count: number
   marriage_year: number | null
+  // family context
+  lives_with_parents: boolean
+  relatives_influence_level: number | null
+  religious_traditions_importance: number | null
+  // related
+  family_values: FamilyValue[]
+  children: Child[]
   created_at: string
 }
 
@@ -92,6 +138,7 @@ export type AnalyticsResult = {
   relatives_index: 'low' | 'medium' | 'high' | null
   finance_index: number | null
   child_environment_index: number | null
+  level_number: number
   created_at: string
 }
 
@@ -126,29 +173,124 @@ export type FamilyConstitution = {
   updated_at: string
 }
 
+/** Библиотечная практика из БД */
+export type Practice = {
+  id: string
+  title: string
+  description: string
+  instructions: string
+  category: string
+  category_label: string
+  slot_type: 'main' | 'conversation' | 'gesture' | 'activity' | 'growth'
+  slot_label: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty_label: string
+  duration_minutes: number
+  tags: string[]
+  academy_article_slug: string | null
+}
+
+/** Один слот в ежедневном задании */
+export type AssignmentSlot = {
+  slot_type: 'main' | 'conversation' | 'gesture' | 'activity' | 'growth'
+  slot_label: string
+  practice: Practice | null
+  completed: boolean
+  completed_at: string | null
+}
+
+/** План семейного развития (один на пару) */
+export type FamilyDevelopmentPlan = {
+  id: string
+  current_level: number
+  current_stage: number
+  stage_name: string
+  stage_emoji: string
+  level_label: string
+  level_emoji: string
+  level_xp_current: number
+  level_xp_for_next: number
+  level_progress_pct: number
+  priority_zone: string
+  secondary_zone: string
+  tertiary_zone: string
+  total_completed: number
+  next_diagnostic_in_days: number | null
+  requires_diagnostic: boolean
+  last_diagnostic_at: string | null
+}
+
+/** Ежедневное задание пары */
+export type DailyAssignment = {
+  id: string
+  date: string
+  is_ai_generated: boolean
+  slots: AssignmentSlot[]
+  completed_count: number
+  total_completable: number
+  is_fully_completed: boolean
+  categories_used: string[]
+  plan: FamilyDevelopmentPlan | null
+  // Diagnostics gate — present only when requires_diagnostics: true
+  requires_diagnostics?: boolean
+  locked?: boolean
+  reason?: 'waiting_partner' | 'not_started'
+  current_level?: number
+  partner_a_done?: boolean
+  partner_b_done?: boolean
+  i_am_partner_a?: boolean
+}
+
+/** @deprecated Используется только для обратной совместимости */
+export type DiagnosticsGateResponse = {
+  requires_diagnostics: true
+  partner_a_done: boolean
+  partner_b_done: boolean
+}
+
+/** Статистика практик пары */
+export type PracticeStats = {
+  total_completed: number
+  total_slots: number
+  completion_rate: number
+  current_streak: number
+  favorite_category: string | null
+  category_progress: Record<string, { assigned: number; completed: number; label: string }>
+}
+
+/** @deprecated Используйте DailyAssignment */
 export type PracticeItem = {
   key: string
   content: string
   completed: boolean
 }
 
-export type DailyPractice = {
+/** @deprecated Используйте DailyAssignment */
+export type DailyPractice = DailyAssignment
+
+export type AnalyticsInsight = {
   id: string
-  date: string
-  is_ai_generated: boolean
-  items: PracticeItem[]
+  strengths_summary: string
+  growth_summary: string
+  attention_summary: string
+  ai_analysis: string
+  recommendation: string
+  next_focus: string
+  created_at: string
 }
 
 export type AnalyticsResultShort = {
   id: string
   overall_score: number
   is_latest: boolean
+  level_number: number
   created_at: string
 }
 
 export type DiagnosticSession = {
   id: string
   status: 'in_progress' | 'completed' | 'abandoned'
+  level_number: number
   started_at: string
   finished_at: string | null
   answers_count: number
@@ -159,10 +301,32 @@ export type DiagnosticSession = {
 export type Question = {
   id: string
   zone: Zone
+  level_number: number
   text: string
   question_type: 'scale' | 'choice' | 'text'
   options: string[] | null
   order_index: number
+}
+
+export type DiagnosticLevelStatus = 'locked' | 'unlocked' | 'in_progress' | 'diagnosed' | 'completed'
+
+export type DiagnosticLevel = {
+  level_number: number
+  title: string
+  emoji: string
+  description: string
+  status: DiagnosticLevelStatus
+  partner_a_done: boolean
+  partner_b_done: boolean
+  both_diagnosed_at: string | null
+  completed_at: string | null
+}
+
+export type FamilyJourney = {
+  max_unlocked_level: number
+  last_completed_level: number
+  levels: DiagnosticLevel[]
+  i_am_partner_a: boolean
 }
 
 export type Message = {

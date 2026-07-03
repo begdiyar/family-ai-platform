@@ -6,8 +6,18 @@ from apps.couples.models import Couple
 
 class AIConversationRepository:
     @staticmethod
-    def create(couple: Couple, user: User, title: str = None) -> AIConversation:
-        return AIConversation.objects.create(couple=couple, user=user, title=title)
+    def create(
+        couple,
+        user: User,
+        title: str = None,
+        dialog_type: str = AIConversation.DIALOG_CHAT,
+    ) -> AIConversation:
+        return AIConversation.objects.create(
+            couple=couple,
+            user=user,
+            title=title,
+            dialog_type=dialog_type,
+        )
 
     @staticmethod
     def list_for_user(user: User) -> List[AIConversation]:

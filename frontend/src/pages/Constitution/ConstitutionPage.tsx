@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
@@ -35,6 +36,7 @@ const SECTION_STATICS: SectionStatic[] = [
 
 export const ConstitutionPage = () => {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation('common')
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<Record<string, string[]>>({})
@@ -69,7 +71,7 @@ export const ConstitutionPage = () => {
   const { data: constitution, isLoading } = useQuery({
     queryKey: ['constitution'],
     queryFn: ConstitutionService.get,
-    enabled: !!me?.couple,
+    enabled: me?.couple?.status === 'active',
     retry: false,
   })
 
@@ -97,6 +99,20 @@ export const ConstitutionPage = () => {
     sections.forEach((s) => { d[s.key] = [...(c[s.key] as string[])] })
     setDraft(d)
     setEditing(true)
+  }
+
+  if (me?.couple?.status === 'pending') {
+    return (
+      <div className="p-6">
+        <EmptyState
+          icon={<ScrollText />}
+          title={t('pending_couple_title')}
+          description={t('invite_partner_first')}
+          actionLabel={t('invite_partner_btn')}
+          onAction={() => navigate('/app/couple')}
+        />
+      </div>
+    )
   }
 
   if (!me?.couple) {

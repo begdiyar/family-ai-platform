@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { AcademyService } from '@/services/academy.service'
 import { Button } from '@/components/ui/Button'
+import { celebrateMedium } from '@/lib/confetti'
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
 const fadeUp = (delay = 0) => ({
@@ -61,16 +62,28 @@ function MarkdownBody({ text }: { text: string }) {
         }
         i++
       }
+      const [headRow, ...bodyRows] = rows
       result.push(
         <div key={`table-${i}`} className="overflow-x-auto my-3">
           <table className="w-full text-xs border-collapse">
-            {rows.map((row, ri) => (
-              <tr key={ri} className={ri === 0 ? 'bg-primary/5' : ri % 2 === 0 ? 'bg-surface' : ''}>
-                {row.map((cell, ci) => (
-                  <td key={ci} className="border border-sand/60 px-3 py-2 text-ink">{parseInline(cell)}</td>
-                ))}
-              </tr>
-            ))}
+            {headRow && (
+              <thead>
+                <tr className="bg-primary/5">
+                  {headRow.map((cell, ci) => (
+                    <th key={ci} className="border border-sand/60 px-3 py-2 text-ink font-semibold text-left">{parseInline(cell)}</th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {bodyRows.map((row, ri) => (
+                <tr key={ri} className={ri % 2 === 0 ? '' : 'bg-surface'}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className="border border-sand/60 px-3 py-2 text-ink">{parseInline(cell)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )
@@ -115,6 +128,7 @@ export const ArticleDetailPage = () => {
       qc.invalidateQueries({ queryKey: ['academy-progress'] })
       if (data.newly_completed) {
         toast.success(t('toast_article_read', { defaultValue: 'Статья прочитана!' }))
+        celebrateMedium()
         setReflectionStep('understood')
       }
     },

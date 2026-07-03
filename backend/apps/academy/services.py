@@ -27,15 +27,12 @@ class AcademyService:
         result = AnalyticsRepository.get_latest_for_couple(couple) if couple else None
 
         if result:
-            zone_map = {zs.zone: zs for zs in result.zone_scores.all() if hasattr(result, 'zone_scores')}
+            from apps.analytics.services import AnalyticsService
+            zone_details = AnalyticsService.get_zone_detail_for_result(result)
+            low_zones = [z for z in zone_details if z['couple_avg'] < 50]
 
-            low_zones = [
-                z for z in result.zone_scores.all()
-                if z.couple_avg < 50 and z.status == 'attention'
-            ] if hasattr(result, 'zone_scores') else []
-
-            for zone_score in low_zones[:2]:
-                zone = zone_score.zone
+            for zone_detail in low_zones[:2]:
+                zone = zone_detail['zone']
                 articles = list(
                     ArticleRepository.list_published(category=zone)
                     .exclude(id__in=completed_article_ids)[:2]
@@ -43,7 +40,7 @@ class AcademyService:
                 for article in articles:
                     recommendations.append({
                         'type': 'article',
-                        'reason': f'Укрепить зону «{zone_score.label}»',
+                        'reason': f'Укрепить зону «{zone_detail["label"]}»',
                         'item': article,
                     })
 

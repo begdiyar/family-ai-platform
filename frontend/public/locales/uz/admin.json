@@ -1,0 +1,145 @@
+{
+  "layout": {
+    "brand": "Admin Panel",
+    "sections": { "analytics": "Tahlil", "data": "Ma'lumotlar", "system": "Tizim" },
+    "nav": {
+      "overview": "Umumiy", "families": "Oilalar", "problems": "Muammolar",
+      "statistics": "Statistika", "stat_short": "Stat.", "export": "Eksport", "settings": "Sozlamalar"
+    },
+    "logout": "Chiqish"
+  },
+  "common": {
+    "score": { "critical": "Kritik", "warning": "Diqqat", "stable": "Barqaror", "excellent": "A'lo" },
+    "score_detail": { "critical": "Kritik", "warning": "E'tibor kerak", "stable": "Barqaror", "excellent": "Yuqori daraja" },
+    "crisis": { "none": "Normal", "warning": "Diqqat", "critical": "Inqiroz" },
+    "level": { "good": "Yaxshi", "medium": "O'rtacha", "warning": "Diqqat" },
+    "status": { "active": "Faol", "inactive": "Yo'q" },
+    "zones": {
+      "communication": "Muloqot", "trust": "Ishonch", "intimacy": "Yaqinlik",
+      "conflict": "Ziddiyatlar", "values": "Qadriyatlar", "future": "Kelajak"
+    },
+    "period": { "day": "Kunlar bo'yicha", "week": "Haftalar bo'yicha", "month": "Oylar bo'yicha" },
+    "period_short": { "day": "kunlar", "week": "haftalar", "month": "oylar" },
+    "loading": "Yuklanmoqda...", "error": "Ma'lumotlarni yuklashda xatolik",
+    "error_hint": "Brauzer konsolini tekshiring (DevTools → Console).",
+    "families_pct": "% oila", "families_count": "{{count}} oila",
+    "see_all": "Hammasini ko'rish →"
+  },
+  "dashboard": {
+    "title": "Admin paneli",
+    "subtitle": "Platforma tahlili real vaqtda",
+    "export": "Excel eksport", "export_short": "Eksport",
+    "kpi": {
+      "users": "Foydalanuvchilar", "families": "Oilalar", "active_30d": "Faol/30k", "new_month": "Oyda yangi",
+      "diagnostics": "Diagnostika", "practices": "Amaliyot", "ai_chats": "AI suhbat",
+      "users_full": "Foydalanuvchilar", "active_families": "Faol oilalar",
+      "active_30d_full": "30 kunda faol", "new_month_full": "Oyda yangilar",
+      "practices_full": "Amaliyot bajarildi", "ai_messages": "AI xabarlar", "avg_index": "O'rt. indeks"
+    },
+    "crisis_title": "Inqiroz darajasi bo'yicha taqsimot",
+    "charts": { "registrations": "Ro'yxatdan o'tish", "activity": "Oilalar faolligi" },
+    "recent_families": "So'nggi oilalar",
+    "table": { "family": "Oila", "date": "Sana", "diagnostics": "Diagnostika", "practices": "Amaliyot", "index": "Indeks", "status": "Holat" }
+  },
+  "families": {
+    "title": "Oilalar",
+    "search_placeholder": "Hamkor ismi yoki email...",
+    "search": "Qidirish", "filters": "Filtrlar", "reset": "Tozalash", "excel": "Excel",
+    "filter": {
+      "date_from": "Sanadan", "date_to": "Sanagacha", "score_from": "Indeks dan", "score_to": "Indeks gacha",
+      "activity": "Faollik", "all": "Barchasi", "active_only": "Faqat faollar"
+    },
+    "table": { "family": "Oila", "date": "Sana", "diagnostics": "Diagn.", "practices": "Amal.", "index": "Indeks", "crisis": "Inqiroz", "status": "Holat" },
+    "empty": "Oilalar hali yo'q",
+    "error_hint": "Backend ishga tushirilganligini va admin huquqlaringiz borligini tekshiring.",
+    "pagination": "{{page}}-sahifa {{total}} dan · {{count}} yozuv"
+  },
+  "problems": {
+    "title": "Muammolar statistikasi",
+    "subtitle": "{{count}} ta joriy diagnostika asosida",
+    "no_data": "Ma'lumot yetarli emas",
+    "no_data_hint": "Tahlil ko'rsatish uchun kamida 5 ta tugatilgan diagnostika kerak.",
+    "crisis_chart": "Inqiroz darajasi bo'yicha taqsimot",
+    "radar_title": "Zonalar bo'yicha o'rtacha ball",
+    "bar_title": "Past ball (<50%) olan oilalar zonalar bo'yicha",
+    "bar_subtitle": "Zona 50% dan past bo'lgan oilalar foizi",
+    "families_tooltip": "Oilalar",
+    "zone_table": "Zonalar bo'yicha tafsilot",
+    "cols": { "zone": "Zona", "avg_score": "O'rt. ball", "problem_count": "Muammoli oilalar", "problem_pct": "% muammo", "level": "Daraja" },
+    "tooltip_families": "{{pct}}% ({{count}} oila)"
+  },
+  "statistics": {
+    "title": "Statistika",
+    "subtitle": "Platformadagi munosabatlar salomatligi ko'rsatkichlari",
+    "dist_title": "Juftliklarni sog'liq darajasi bo'yicha taqsimlanishi",
+    "dist_subtitle": "Har bir indeks oralig'idagi juftliklar soni",
+    "dist_low": "0–25 Kritik",
+    "dist_below": "25–50 Pastroq",
+    "dist_above": "50–75 Yaxshi",
+    "dist_high": "75–100 A'lo",
+    "trend_title": "O'rtacha munosabatlar salomatligi indeksi",
+    "trend_subtitle": "Barcha juftliklar bo'yicha o'rtacha ball qanday o'zgarmoqda",
+    "act_title": "Juftlik faolligi",
+    "act_subtitle": "Davr uchun diagnostika va amaliyotlar",
+    "no_data": "Davr uchun ma'lumot yo'q",
+    "avg_score": "O'rtacha ball",
+    "couples": "Juftlik",
+    "diagnostics": "Diagnostika",
+    "practices": "Amaliyotlar"
+  },
+  "export": {
+    "title": "Ma'lumotlarni eksport qilish",
+    "subtitle": "Platforma ma'lumotlarini Excel formatida yuklab olish",
+    "stats": { "families": "Bazadagi oilalar", "diagnostics": "Diagnostika", "practices": "Amaliyot", "users": "Foydalanuvchilar" },
+    "families_card": {
+      "title": "Oilalar va statistika",
+      "desc": "Ikki varaq: barcha juftliklar batafsil + xulosa. Sarlavhalar interfeys tilida.",
+      "fields": [
+        "Ikki hamkorning ismi, familiyasi va telefoni",
+        "Har bir daraja bo'yicha diagnostika (1–10)",
+        "Bajarilgan amaliyotlar soni",
+        "Munosabat indeksi va holati",
+        "'Xulosa' varag'i: barcha oilalar bo'yicha jami"
+      ],
+      "btn_idle": "Excel yuklab olish", "btn_loading": "Yuklanmoqda...", "btn_done": "Yuklab olindi!", "btn_error": "Xatolik"
+    },
+    "reports_card": {
+      "title": "Tahliliy hisobotlar",
+      "badge": "Tez kunda",
+      "desc": "Zonalar bo'yicha batafsil tahlil, diagnostika tarixi, juftlik progressi — ishlab chiqilmoqda."
+    }
+  },
+  "settings": {
+    "title": "Tizim sozlamalari",
+    "subtitle": "Tizim ma'lumotlari va konfiguratsiya",
+    "sys_info": "Tizim ma'lumotlari",
+    "sys": { "platform": "Platforma", "database": "Ma'lumotlar bazasi", "auth": "Avtorizatsiya", "timezone": "Vaqt mintaqasi" },
+    "admin_user": "Joriy administrator",
+    "platform_state": "Platforma holati",
+    "state": { "users": "Foydalanuvchilar", "families": "Oilalar", "diagnostics": "Diagnostika", "ai_messages": "AI xabarlar" },
+    "pwd_title": "Parolni o'zgartirish",
+    "pwd_current": "Joriy parol",
+    "pwd_new": "Yangi parol",
+    "pwd_confirm": "Yangi parolni tasdiqlang",
+    "pwd_save": "Parolni o'zgartirish",
+    "pwd_changed": "Parol muvaffaqiyatli o'zgartirildi",
+    "pwd_error": "Parolni o'zgartirib bo'lmadi",
+    "pwd_current_required": "Joriy parolni kiriting",
+    "pwd_min": "Kamida 8 ta belgi",
+    "pwd_mismatch": "Parollar mos kelmaydi",
+    "coming_soon": "Qo'shimcha sozlamalar",
+    "coming_soon_badge": "Tez kunda",
+    "coming_soon_desc": "Rol boshqaruvi, email bildirishnomalar, API limitlari, zaxiralash — ishlab chiqilmoqda."
+  },
+  "family": {
+    "registered_on": "Oila · ro'yxatdan o'tgan {{date}}",
+    "not_found": "Oila topilmadi",
+    "kpi": { "diagnostics": "Diagnostika", "practices": "Amaliyot", "registered": "Ro'yxatdan o'tgan", "children": "Farzandlar", "no_children": "Yo'q" },
+    "score_card": "Munosabatlar indeksi",
+    "score_out_of": "100 baldan",
+    "radar_title": "Zonalar (so'nggi diagnostika)",
+    "timeline_title": "Diagnostikalar dinamikasi",
+    "zone_detail": "Zonalar bo'yicha tafsilot",
+    "overall": "Umumiy"
+  }
+}

@@ -9,10 +9,12 @@ urlpatterns = [
     path('api/v1/diagnostics/', include('apps.diagnostics.urls')),
     path('api/v1/analytics/', include('apps.analytics.urls')),
     path('api/v1/ai/', include('apps.ai_consultant.urls')),
+    path('api/v1/ai/', include('apps.ai.urls')),
     path('api/v1/plans/', include('apps.plans.urls')),
     path('api/v1/reports/', include('apps.reports.urls')),
     path('api/v1/mediation/', include('apps.mediation.urls')),
     path('api/v1/constitution/', include('apps.constitution.urls')),
     path('api/v1/practices/', include('apps.practices.urls')),
     path('api/v1/academy/', include('apps.academy.urls')),
+    path('api/v1/admin-panel/', include('apps.admin_panel.urls')),
 ]

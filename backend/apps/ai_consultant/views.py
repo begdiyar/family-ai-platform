@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from shared.exceptions import NotFoundError, BusinessLogicError
 from apps.couples.repositories import CoupleRepository
 from .models import AIConversation
 from .repositories import AIConversationRepository, AIMessageRepository
@@ -23,9 +22,7 @@ class ConversationListCreateView(APIView):
         return Response({'count': len(data), 'results': data})
 
     def post(self, request):
-        couple = CoupleRepository.get_active_for_user(request.user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(request.user)
         serializer = CreateConversationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         result = AIConsultantService.create_conversation(

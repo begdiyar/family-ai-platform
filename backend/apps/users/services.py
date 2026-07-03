@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -8,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from shared.exceptions import BusinessLogicError, NotFoundError
 from .models import User
 from .repositories import UserRepository
+
+logger = logging.getLogger(__name__)
 
 
 class TokenService:
@@ -25,24 +28,37 @@ class TokenService:
             token = RefreshToken(refresh_token)
             token.blacklist()
         except Exception:
-            pass
+            logger.warning("Failed to blacklist refresh token", exc_info=True)
 
 
 class AuthService:
     @staticmethod
-    def register(email: str, password: str, first_name: str) -> dict:
-        if UserRepository.email_exists(email):
-            raise BusinessLogicError('EMAIL_ALREADY_EXISTS', 'Этот email уже зарегистрирован')
-        user = UserRepository.create(email=email, password=password, first_name=first_name)
+    def register(phone: str, password: str, first_name: str) -> dict:
+        if UserRepository.phone_exists(phone):
+            raise BusinessLogicError('PHONE_ALREADY_EXISTS', 'Этот номер телефона уже зарегистрирован')
+        user = UserRepository.create(phone=phone, password=password, first_name=first_name)
         tokens = TokenService.generate_for_user(user)
-        EmailService.send_verification(user)
         return {'user': user, 'tokens': tokens}
 
     @staticmethod
-    def login(email: str, password: str) -> dict:
-        user = UserRepository.get_by_email(email)
-        if not user or not user.check_password(password):
-            raise BusinessLogicError('INVALID_CREDENTIALS', 'Неверный email или пароль')
+    def login(phone: str, password: str) -> dict:
+        # Accept phone number, username (e.g. "admin") or first_name (case-insensitive)
+        user = (
+            UserRepository.get_by_phone(phone)
+            or UserRepository.get_by_username(phone)
+            or UserRepository.get_by_first_name(phone)
+        )
+        if not user:
+            # Check if name exists but is ambiguous (multiple matches)
+            from .models import User as UserModel
+            if UserModel.objects.filter(first_name__iexact=phone, is_active=True).count() > 1:
+                raise BusinessLogicError(
+                    'AMBIGUOUS_NAME',
+                    'Несколько аккаунтов с таким именем. Войдите по номеру телефона.'
+                )
+            raise BusinessLogicError('INVALID_CREDENTIALS', 'Неверные данные для входа')
+        if not user.check_password(password):
+            raise BusinessLogicError('INVALID_CREDENTIALS', 'Неверные данные для входа')
         tokens = TokenService.generate_for_user(user)
         return {'user': user, 'tokens': tokens}
 

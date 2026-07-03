@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
@@ -21,6 +22,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export const MediationPage = () => {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation('mediation')
   const [view, setView] = useState<'list' | 'create' | 'session'>('list')
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -38,7 +40,7 @@ export const MediationPage = () => {
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['mediation'],
     queryFn: MediationService.list,
-    enabled: !!me?.couple,
+    enabled: me?.couple?.status === 'active',
   })
 
   const createMutation = useMutation({
@@ -51,6 +53,20 @@ export const MediationPage = () => {
     },
     onError: () => toast.error(t('toast_create_error')),
   })
+
+  if (me?.couple?.status === 'pending') {
+    return (
+      <div className="p-6">
+        <EmptyState
+          icon={<Scale />}
+          title={t('common:pending_couple_title')}
+          description={t('common:invite_partner_first')}
+          actionLabel={t('common:invite_partner_btn')}
+          onAction={() => navigate('/app/couple')}
+        />
+      </div>
+    )
+  }
 
   if (!me?.couple) {
     return (

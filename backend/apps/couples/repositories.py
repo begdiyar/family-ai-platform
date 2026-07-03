@@ -8,6 +8,17 @@ from apps.users.models import User
 
 class CoupleRepository:
     @staticmethod
+    def require_full_couple(user: User) -> 'Couple':
+        """Returns couple only if STATUS_ACTIVE. Raises BusinessLogicError otherwise."""
+        from shared.exceptions import BusinessLogicError
+        couple = CoupleRepository.get_active_for_user(user)
+        if not couple:
+            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        if couple.status != Couple.STATUS_ACTIVE:
+            raise BusinessLogicError('PARTNER_NOT_JOINED', 'Пригласите партнёра для доступа к этой функции')
+        return couple
+
+    @staticmethod
     def get_active_for_user(user: User) -> Optional[Couple]:
         return (
             Couple.objects

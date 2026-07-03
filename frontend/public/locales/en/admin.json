@@ -1,0 +1,145 @@
+{
+  "layout": {
+    "brand": "Admin Panel",
+    "sections": { "analytics": "Analytics", "data": "Data", "system": "System" },
+    "nav": {
+      "overview": "Overview", "families": "Families", "problems": "Problems",
+      "statistics": "Statistics", "stat_short": "Stats", "export": "Export", "settings": "Settings"
+    },
+    "logout": "Logout"
+  },
+  "common": {
+    "score": { "critical": "Critical", "warning": "Warning", "stable": "Stable", "excellent": "Excellent" },
+    "score_detail": { "critical": "Critical", "warning": "Needs attention", "stable": "Stable", "excellent": "High level" },
+    "crisis": { "none": "Normal", "warning": "Warning", "critical": "Crisis" },
+    "level": { "good": "Good", "medium": "Average", "warning": "Warning" },
+    "status": { "active": "Active", "inactive": "No" },
+    "zones": {
+      "communication": "Communication", "trust": "Trust", "intimacy": "Intimacy",
+      "conflict": "Conflicts", "values": "Values", "future": "Future"
+    },
+    "period": { "day": "By days", "week": "By weeks", "month": "By months" },
+    "period_short": { "day": "days", "week": "weeks", "month": "months" },
+    "loading": "Loading...", "error": "Failed to load data",
+    "error_hint": "Check the browser console (DevTools → Console) for details.",
+    "families_pct": "% of families", "families_count": "{{count}} families",
+    "see_all": "View all →"
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Platform analytics in real time",
+    "export": "Export Excel", "export_short": "Export",
+    "kpi": {
+      "users": "Users", "families": "Families", "active_30d": "Active/30d", "new_month": "This month",
+      "diagnostics": "Diagnostics", "practices": "Practices", "ai_chats": "AI chats",
+      "users_full": "Users", "active_families": "Active families",
+      "active_30d_full": "Active in 30 days", "new_month_full": "New this month",
+      "practices_full": "Practices done", "ai_messages": "AI messages", "avg_index": "Avg. score"
+    },
+    "crisis_title": "Crisis level distribution",
+    "charts": { "registrations": "Registrations", "activity": "Family activity" },
+    "recent_families": "Recent families",
+    "table": { "family": "Family", "date": "Date", "diagnostics": "Diagnostics", "practices": "Practices", "index": "Score", "status": "Status" }
+  },
+  "families": {
+    "title": "Families",
+    "search_placeholder": "Partner name or email...",
+    "search": "Search", "filters": "Filters", "reset": "Reset", "excel": "Excel",
+    "filter": {
+      "date_from": "Date from", "date_to": "Date to", "score_from": "Score from", "score_to": "Score to",
+      "activity": "Activity", "all": "All", "active_only": "Active only"
+    },
+    "table": { "family": "Family", "date": "Date", "diagnostics": "Diagn.", "practices": "Pract.", "index": "Score", "crisis": "Crisis", "status": "Status" },
+    "empty": "No families yet",
+    "error_hint": "Make sure the backend is running and you have admin rights. Open DevTools → Network for details.",
+    "pagination": "Page {{page}} of {{total}} · {{count}} records"
+  },
+  "problems": {
+    "title": "Problem Statistics",
+    "subtitle": "Based on {{count}} current diagnostics",
+    "no_data": "Insufficient data",
+    "no_data_hint": "At least 5 completed diagnostics are required. Data will appear automatically after couples complete diagnostics.",
+    "crisis_chart": "Distribution by crisis level",
+    "radar_title": "Average score by zones",
+    "bar_title": "Families with low score (<50%) by zones",
+    "bar_subtitle": "Percentage of families where zone is below 50%",
+    "families_tooltip": "Families",
+    "zone_table": "Zone breakdown",
+    "cols": { "zone": "Zone", "avg_score": "Avg. score", "problem_count": "Families with issue", "problem_pct": "% issues", "level": "Level" },
+    "tooltip_families": "{{pct}}% ({{count}} families)"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "subtitle": "Key relationship health indicators on the platform",
+    "dist_title": "Couples by relationship health level",
+    "dist_subtitle": "How many couples fall in each score range",
+    "dist_low": "0–25 Critical",
+    "dist_below": "25–50 Below average",
+    "dist_above": "50–75 Good",
+    "dist_high": "75–100 Excellent",
+    "trend_title": "Average relationship health index",
+    "trend_subtitle": "How the average score changes across all couples over time",
+    "act_title": "Couple activity",
+    "act_subtitle": "Diagnostics and practices over period",
+    "no_data": "No data for period",
+    "avg_score": "Avg score",
+    "couples": "Couples",
+    "diagnostics": "Diagnostics",
+    "practices": "Practices"
+  },
+  "export": {
+    "title": "Export Data",
+    "subtitle": "Export platform data in Excel format",
+    "stats": { "families": "Families in DB", "diagnostics": "Diagnostics", "practices": "Practices", "users": "Users" },
+    "families_card": {
+      "title": "Families & Statistics",
+      "desc": "Two sheets: all couples in detail + summary. Headers in the interface language.",
+      "fields": [
+        "First name, last name and phone of both partners",
+        "Diagnostics per level (1–10)",
+        "Practices completed",
+        "Relationship index and status",
+        "'Summary' sheet: totals across all families"
+      ],
+      "btn_idle": "Download Excel", "btn_loading": "Loading...", "btn_done": "Downloaded!", "btn_error": "Error"
+    },
+    "reports_card": {
+      "title": "Analytical Reports",
+      "badge": "Soon",
+      "desc": "Detailed zone analytics, diagnostic history, couple progress — in development."
+    }
+  },
+  "settings": {
+    "title": "System Settings",
+    "subtitle": "System information and configuration",
+    "sys_info": "System information",
+    "sys": { "platform": "Platform", "database": "Database", "auth": "Authorization", "timezone": "Timezone" },
+    "admin_user": "Current administrator",
+    "platform_state": "Platform state",
+    "state": { "users": "Users", "families": "Families", "diagnostics": "Diagnostics", "ai_messages": "AI messages" },
+    "pwd_title": "Change password",
+    "pwd_current": "Current password",
+    "pwd_new": "New password",
+    "pwd_confirm": "Confirm new password",
+    "pwd_save": "Change password",
+    "pwd_changed": "Password changed successfully",
+    "pwd_error": "Failed to change password",
+    "pwd_current_required": "Enter your current password",
+    "pwd_min": "Minimum 8 characters",
+    "pwd_mismatch": "Passwords do not match",
+    "coming_soon": "Additional settings",
+    "coming_soon_badge": "Coming soon",
+    "coming_soon_desc": "Role management, email notifications, API limits, backups — coming soon."
+  },
+  "family": {
+    "registered_on": "Family · registered {{date}}",
+    "not_found": "Family not found",
+    "kpi": { "diagnostics": "Diagnostics", "practices": "Practices", "registered": "Registered", "children": "Children", "no_children": "None" },
+    "score_card": "Relationship score",
+    "score_out_of": "out of 100 possible points",
+    "radar_title": "Zones (latest diagnostic)",
+    "timeline_title": "Diagnostic history",
+    "zone_detail": "Zone breakdown",
+    "overall": "Overall"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "app_name": "Strong Family",
+  "app_name": "Oila AI",
   "app_tagline": "for couples",
   "nav": {
     "home": "Home",
@@ -8,10 +8,11 @@
     "analytics": "Analytics",
     "academy": "Growth",
     "practices": "Practices",
-    "ai": "AI Coach",
+    "ai": "AI Chat",
     "mediation": "Mediator",
     "profile": "Profile",
-    "logout": "Log out"
+    "logout": "Log out",
+    "more": "More"
   },
   "zones": {
     "communication": "Communication",
@@ -56,6 +57,7 @@
   "need_couple": "Connect with your partner first",
   "invite_partner_first": "Invite your partner to unlock all features",
   "invite_partner_btn": "Invite partner",
+  "pending_couple_title": "Partner not connected",
   "online": "Online",
   "confidential": "Confidential",
   "error": "Error",

@@ -1,5 +1,5 @@
 {
-  "app_name": "Mustahkam Oila",
+  "app_name": "Oila AI",
   "app_tagline": "juftliklar uchun",
   "nav": {
     "home": "Bosh sahifa",
@@ -8,10 +8,11 @@
     "analytics": "Tahlil",
     "academy": "O'sish",
     "practices": "Mashqlar",
-    "ai": "AI maslahatchi",
+    "ai": "AI-chat",
     "mediation": "Vositachi",
     "profile": "Profil",
-    "logout": "Chiqish"
+    "logout": "Chiqish",
+    "more": "Ko'proq"
   },
   "zones": {
     "communication": "Muloqot",
@@ -56,6 +57,7 @@
   "need_couple": "Avval turmush o'rtoqingizni qo'shing",
   "invite_partner_first": "Barcha imkoniyatlarni ochish uchun turmush o'rtoqingizni taklif qiling",
   "invite_partner_btn": "Taklif qilish",
+  "pending_couple_title": "Hamkor ulanmagan",
   "online": "Onlayn",
   "confidential": "Maxfiy",
   "error": "Xatolik",

@@ -1,17 +1,29 @@
 from rest_framework import serializers
 from .models import Question, DiagnosticSession
+from .repositories import DiagnosticRepository, QuestionRepository
+
+SUPPORTED_LANGS = ('ru', 'en', 'uz')
+
+
+def _lang(request) -> str:
+    lang = (request.headers.get('X-Language') or 'ru').lower()
+    return lang if lang in SUPPORTED_LANGS else 'ru'
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    text = serializers.SerializerMethodField()
+
+    def get_text(self, obj):
+        request = self.context.get('request')
+        if request:
+            lang = _lang(request)
+            if lang != 'ru' and obj.i18n.get(lang, {}).get('text'):
+                return obj.i18n[lang]['text']
+        return obj.text
+
     class Meta:
         model = Question
-        fields = ['id', 'zone', 'text', 'question_type', 'options', 'order_index']
-
-
-class ZoneQuestionsSerializer(serializers.Serializer):
-    zone = serializers.CharField()
-    label = serializers.CharField()
-    questions = QuestionSerializer(many=True)
+        fields = ['id', 'zone', 'level_number', 'text', 'question_type', 'options', 'order_index']
 
 
 class SessionSerializer(serializers.ModelSerializer):
@@ -20,23 +32,23 @@ class SessionSerializer(serializers.ModelSerializer):
     progress_percent = serializers.SerializerMethodField()
 
     def get_answers_count(self, obj):
-        from .repositories import DiagnosticRepository
         return DiagnosticRepository.get_answers_count(obj)
 
     def get_total_questions(self, obj):
-        from .repositories import QuestionRepository
-        return QuestionRepository.count_active()
+        return QuestionRepository.count_by_level(obj.level_number)
 
     def get_progress_percent(self, obj):
-        from .repositories import DiagnosticRepository, QuestionRepository
         count = DiagnosticRepository.get_answers_count(obj)
-        total = QuestionRepository.count_active()
+        total = QuestionRepository.count_by_level(obj.level_number)
         return round(count / total * 100) if total else 0
 
     class Meta:
         model = DiagnosticSession
-        fields = ['id', 'status', 'started_at', 'finished_at',
-                  'answers_count', 'total_questions', 'progress_percent']
+        fields = [
+            'id', 'status', 'level_number',
+            'started_at', 'finished_at',
+            'answers_count', 'total_questions', 'progress_percent',
+        ]
 
 
 class AnswerInputSerializer(serializers.Serializer):
@@ -48,3 +60,7 @@ class AnswerInputSerializer(serializers.Serializer):
 
 class SaveAnswersSerializer(serializers.Serializer):
     answers = AnswerInputSerializer(many=True)
+
+
+class StartSessionSerializer(serializers.Serializer):
+    level_number = serializers.IntegerField(min_value=1, max_value=10, default=1)

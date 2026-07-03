@@ -1,5 +1,7 @@
 {
-  "title": "Assessment history",
+  "title": "Analytics",
+  "subtitle": "Assessment history",
+  "level_badge": "Lvl. {{n}}",
   "latest_badge": "Latest",
   "score_label": "Overall score",
   "detail_link": "Detailed analysis",

@@ -1,28 +1,46 @@
 {
-  "greeting_morning": "Xayrli tong",
-  "greeting_day": "Xayrli kun",
-  "greeting_evening": "Xayrli kech",
-  "crisis_critical_title": "Jiddiy vaziyat",
-  "crisis_critical_desc": "Imkon qadar tezroq qayta tiklash rejasini boshlang",
-  "crisis_critical_btn": "Rejaga o'tish",
-  "crisis_warning_text": "Ba'zi sohalarga e'tibor berish kerak",
-  "crisis_warning_link": "Ko'rish →",
-  "index_label": "Munosabatlar ko'rsatkichi",
-  "from_last_session": "oxirgi sessiyadan beri",
-  "no_score_title": "Munosabatlaringiz ko'rsatkichini bilib oling",
-  "no_score_desc": "Tekshiruvdan o'ting — taxminan 15 daqiqa",
-  "no_score_btn": "Tekshiruvni boshlash",
-  "no_couple_title": "Birga boshlang",
-  "practices_label": "Mashqlar",
-  "plan_label": "Reja",
-  "plan_not_started": "Boshlanmagan",
-  "task_of_day": "Kunning vazifasi",
-  "recommendation": "Kunning tavsiyasi",
-  "complete_action": "Bajarish",
-  "all_done_title": "Bugungi barcha mashqlar bajarildi",
-  "all_done_desc": "Ikkalangiz uchun ajoyib kun 🌿",
-  "quick_access": "Tezkor kirish",
-  "ai_sublabel": "Suhbatlashish",
-  "analytics_label": "Tahlil",
-  "analytics_sublabel": "To'liq hisobot"
+  "hero_title": "Juftliklar uchun platforma",
+  "hero_tagline": "Munosabatlaringizni ongli ravishda rivojlantiring. Birga.",
+  "hero_desc": "Ikkovlari uchun vositalar: diagnostika, kunlik mashqlar, AI maslahatchi va haqiqiy ma'lumotlaringizga asoslangan rivojlanish rejasi.",
+
+  "features_label": "Ichida nima bor",
+
+  "feat_diagnostics_title": "Diagnostika",
+  "feat_diagnostics_desc": "6 asosiy soha bo'yicha 10 darajali baholash tizimi. Birga o'ting — kuchli tomonlar va o'sish nuqtalarining halol tahlilini oling.",
+
+  "feat_index_title": "Munosabat indeksi",
+  "feat_index_desc": "Juftlikning sog'lomlik ko'rsatkichi. Har sessiyadan keyin dinamika va soha bo'yicha batafsil tahlil.",
+
+  "feat_practices_title": "Mashqlar",
+  "feat_practices_desc": "Har kuni aloqani mustahkamlaydigan 5 ta qisqa mashq. 5–15 daqiqa vaqt oladi va darajangizga moslashadi.",
+
+  "feat_academy_title": "Akademiya",
+  "feat_academy_desc": "Munosabatlar psixologiyasi bo'yicha maqolalar, ko'nikmalar va dasturlar. O'z sur'atda o'rganing.",
+
+  "feat_ai_title": "AI Maslahatchi",
+  "feat_ai_desc": "Munosabatlar bo'yicha shaxsiy maslahatchi — istalgan vaqt mavjud. Har qanday savolni bering, to'liq javob oling.",
+
+  "feat_mediation_title": "Vositachi",
+  "feat_mediation_desc": "Nizoni ikki tomondan betaraf tahlil qilish. Sherigingizning nuqtai nazarini ko'rish — tushunishning birinchi qadami.",
+
+  "feat_analytics_title": "Tahlil",
+  "feat_analytics_desc": "Barcha diagnostikalar tarixi va PDF hisobotlar. Qanday rivojlanganingizni va nima o'zgarganini ko'ring.",
+
+  "values_label": "Nima uchun ishlaydi",
+
+  "value_two_title": "Ikkovlari uchun yaratilgan",
+  "value_two_desc": "Har bir vosita ikkalangizning ishtirokini talab qiladi. Bu yolg'iz uchun kurs emas — juftlik uchun platforma.",
+
+  "value_honest_title": "Halol va tanqidsiz",
+  "value_honest_desc": "Platforma baholamaydi va tanqid qilmaydi. U sizni va sherigingizni — bor holda — tushunishga yordam beradi.",
+
+  "value_steps_title": "Nazariya emas, aniq qadamlar",
+  "value_steps_desc": "Har bir vosita harakatga olib boradi: mashq, suhbat, tushunish. Mavhum maslahatlar emas, haqiqiy topshiriqlar.",
+
+  "cta_title": "Diagnostikadan boshlang",
+  "cta_desc": "Birinchi qadam — birga baholashdan o'tish. Har biri uchun taxminan 15 daqiqa.",
+  "cta_btn": "Diagnostikani boshlash",
+
+  "no_couple_cta_title": "Sherigingizni taklif qiling",
+  "no_couple_cta_desc": "Platformaning barcha vositalarini ishlatish uchun juftlik yarating"
 }

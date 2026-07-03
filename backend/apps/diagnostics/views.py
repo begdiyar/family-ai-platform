@@ -3,45 +3,32 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 
-from .models import Question, DiagnosticSession
+from .models import DiagnosticSession
 from .repositories import QuestionRepository
 from .serializers import (
-    ZoneQuestionsSerializer, SessionSerializer, SaveAnswersSerializer
+    QuestionSerializer, SessionSerializer,
+    SaveAnswersSerializer, StartSessionSerializer,
 )
-from .services import DiagnosticService
-
-ZONE_LABELS = {
-    'communication': 'Коммуникация',
-    'trust': 'Доверие',
-    'intimacy': 'Близость',
-    'conflict': 'Конфликты',
-    'values': 'Ценности',
-    'future': 'Будущее',
-}
+from .services import DiagnosticService, JourneyService
 
 
 class QuestionsView(APIView):
     def get(self, request):
-        questions = QuestionRepository.get_all_active()
-        zones_data = []
-        zones_order = ['communication', 'trust', 'intimacy', 'conflict', 'values', 'future']
-        for zone in zones_order:
-            zone_questions = [q for q in questions if q.zone == zone]
-            if zone_questions:
-                zones_data.append({
-                    'zone': zone,
-                    'label': ZONE_LABELS[zone],
-                    'questions': zone_questions,
-                })
+        level_number = int(request.query_params.get('level', 1))
+        questions = QuestionRepository.get_by_level(level_number)
         return Response({
+            'level_number': level_number,
             'total': len(questions),
-            'zones': ZoneQuestionsSerializer(zones_data, many=True).data,
+            'questions': QuestionSerializer(questions, many=True, context={'request': request}).data,
         })
 
 
 class SessionCreateView(APIView):
     def post(self, request):
-        session = DiagnosticService.start_session(request.user)
+        serializer = StartSessionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        level_number = serializer.validated_data['level_number']
+        session = DiagnosticService.start_session(request.user, level_number)
         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
 
@@ -69,3 +56,12 @@ class CompleteSessionView(APIView):
         session = get_object_or_404(DiagnosticSession, id=session_id)
         result = DiagnosticService.complete_session(session=session, user=request.user)
         return Response(result)
+
+
+class JourneyView(APIView):
+    def get(self, request):
+        from apps.couples.repositories import CoupleRepository
+        couple = CoupleRepository.require_full_couple(request.user)
+        data = JourneyService.get_journey_data(couple)
+        data['i_am_partner_a'] = str(couple.partner_a_id) == str(request.user.id)
+        return Response(data)

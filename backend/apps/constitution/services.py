@@ -11,17 +11,13 @@ logger = logging.getLogger(__name__)
 class ConstitutionService:
     @staticmethod
     def get_or_create(user: User) -> FamilyConstitution:
-        couple = CoupleRepository.get_active_for_user(user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(user)
         constitution, _ = FamilyConstitution.objects.get_or_create(couple=couple)
         return constitution
 
     @staticmethod
     def update(user: User, data: dict) -> FamilyConstitution:
-        couple = CoupleRepository.get_active_for_user(user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(user)
         constitution, _ = FamilyConstitution.objects.get_or_create(couple=couple)
         allowed_fields = ['values', 'goals', 'communication_rules', 'conflict_rules',
                           'finance_principles', 'parenting_approach']
@@ -34,9 +30,7 @@ class ConstitutionService:
 
     @staticmethod
     def generate_with_ai(user: User) -> FamilyConstitution:
-        couple = CoupleRepository.get_active_for_user(user)
-        if not couple:
-            raise BusinessLogicError('NO_COUPLE', 'Нет активной пары')
+        couple = CoupleRepository.require_full_couple(user)
 
         name_a = couple.partner_a.first_name
         name_b = couple.partner_b.first_name if couple.partner_b else 'партнёр'

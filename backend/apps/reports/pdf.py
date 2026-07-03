@@ -46,7 +46,7 @@ class PDFGenerator:
         from django.utils import timezone
         from datetime import timedelta
         from apps.analytics.models import AnalyticsResult
-        from apps.practices.models import PracticeCompletion
+        from apps.practices.models import AssignmentSlot, COMPLETABLE_SLOTS
         from apps.mediation.models import ConflictSession
         from apps.plans.models import PlanTask, TaskCompletion
 
@@ -64,8 +64,11 @@ class PDFGenerator:
         if first_result and last_result and first_result != last_result:
             score_delta = round(last_result.overall_score - first_result.overall_score, 1)
 
-        practice_completions = PracticeCompletion.objects.filter(
-            practice__couple=couple, created_at__gte=month_ago
+        practice_completions = AssignmentSlot.objects.filter(
+            assignment__couple=couple,
+            assignment__date__gte=month_ago.date(),
+            completed=True,
+            slot_type__in=COMPLETABLE_SLOTS,
         ).count()
 
         mediation_sessions = ConflictSession.objects.filter(

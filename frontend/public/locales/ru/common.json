@@ -1,5 +1,5 @@
 {
-  "app_name": "Крепкая семья",
+  "app_name": "Oila AI",
   "app_tagline": "для пар",
   "nav": {
     "home": "Главная",
@@ -8,10 +8,11 @@
     "analytics": "Аналитика",
     "academy": "Развитие",
     "practices": "Практики",
-    "ai": "AI-консультант",
+    "ai": "AI-чат",
     "mediation": "Медиатор",
     "profile": "Профиль",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "more": "Ещё"
   },
   "zones": {
     "communication": "Коммуникация",
@@ -56,6 +57,7 @@
   "need_couple": "Сначала создайте пару",
   "invite_partner_first": "Пригласите партнёра, чтобы открыть все функции",
   "invite_partner_btn": "Пригласить партнёра",
+  "pending_couple_title": "Партнёр не подключён",
   "online": "Онлайн",
   "confidential": "Конфиденциально",
   "error": "Ошибка",

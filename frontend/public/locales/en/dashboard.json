@@ -1,28 +1,46 @@
 {
-  "greeting_morning": "Good morning",
-  "greeting_day": "Good afternoon",
-  "greeting_evening": "Good evening",
-  "crisis_critical_title": "Critical level",
-  "crisis_critical_desc": "Start your recovery plan as soon as possible",
-  "crisis_critical_btn": "Go to plan",
-  "crisis_warning_text": "Some areas need attention",
-  "crisis_warning_link": "View →",
-  "index_label": "Relationship Index",
-  "from_last_session": "since last session",
-  "no_score_title": "Discover your relationship score",
-  "no_score_desc": "Complete the assessment — it takes about 15 minutes",
-  "no_score_btn": "Start assessment",
-  "no_couple_title": "Start together",
-  "practices_label": "Practices",
-  "plan_label": "Plan",
-  "plan_not_started": "Not started",
-  "task_of_day": "Today's task",
-  "recommendation": "Today's tip",
-  "complete_action": "Complete",
-  "all_done_title": "All practices for today are done",
-  "all_done_desc": "Great day for both of you 🌿",
-  "quick_access": "Quick access",
-  "ai_sublabel": "Chat",
-  "analytics_label": "Analytics",
-  "analytics_sublabel": "Full report"
+  "hero_title": "Platform for couples",
+  "hero_tagline": "Grow your relationship. Together.",
+  "hero_desc": "Tools built for two: diagnostics, daily practices, AI consultant, and a development plan based on your real data.",
+
+  "features_label": "What's inside",
+
+  "feat_diagnostics_title": "Diagnostics",
+  "feat_diagnostics_desc": "A 10-level assessment system across 6 key relationship areas. Take it together — get an honest analysis of strengths and growth points.",
+
+  "feat_index_title": "Relationship Index",
+  "feat_index_desc": "A live indicator of your relationship health. Trends and a breakdown by area after every session.",
+
+  "feat_practices_title": "Practices",
+  "feat_practices_desc": "5 short exercises every day that strengthen your bond. Takes 5–15 minutes and adapts to your level.",
+
+  "feat_academy_title": "Academy",
+  "feat_academy_desc": "Articles, skills, and programs on relationship psychology. Learn at your own pace — alone or together.",
+
+  "feat_ai_title": "AI Consultant",
+  "feat_ai_desc": "A personal relationship advisor — available any time. Ask about anything and get thoughtful answers.",
+
+  "feat_mediation_title": "Mediator",
+  "feat_mediation_desc": "Neutral conflict analysis from both sides. Seeing your partner's perspective is the first step toward understanding.",
+
+  "feat_analytics_title": "Analytics",
+  "feat_analytics_desc": "History of all diagnostics and PDF reports. See how you've grown and what has changed.",
+
+  "values_label": "Why it works",
+
+  "value_two_title": "Built for two",
+  "value_two_desc": "Every tool requires both partners. This isn't a solo course — it's a platform for a couple.",
+
+  "value_honest_title": "Honest and non-judgmental",
+  "value_honest_desc": "The platform doesn't grade or criticize. It helps you understand yourself and your partner — as you are.",
+
+  "value_steps_title": "Concrete steps, not theory",
+  "value_steps_desc": "Every tool leads to action: a practice, a conversation, an insight. Real tasks, not abstract advice.",
+
+  "cta_title": "Start with diagnostics",
+  "cta_desc": "First step — take the assessment together. About 15 minutes each.",
+  "cta_btn": "Start diagnostics",
+
+  "no_couple_cta_title": "Invite your partner",
+  "no_couple_cta_desc": "Create a couple to unlock all platform tools"
 }

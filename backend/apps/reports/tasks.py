@@ -22,7 +22,7 @@ def generate_pdf_report(self, report_id: str):
             r = R.objects.get(id=report_id)
             RR.mark_failed(r)
         except Exception:
-            pass
+            logger.warning("Failed to mark report %s as failed", report_id, exc_info=True)
         raise self.retry(exc=exc)
 
 

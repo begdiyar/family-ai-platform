@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, Plus, ArrowRight, SendHorizonal, Square, ChevronLeft, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -70,6 +70,7 @@ const BubbleAssistant = ({ text, streaming }: { text: string; streaming?: boolea
 /* ── Main component ──────────────────────────────────────────────────── */
 export const AIChatPage = () => {
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const { convId } = useParams<{ convId?: string }>()
   const { t, i18n } = useTranslation('ai')
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -98,7 +99,7 @@ export const AIChatPage = () => {
   const { data: latestAnalytics } = useQuery({
     queryKey: ['analytics', 'latest'],
     queryFn: AnalyticsService.getLatest,
-    enabled: !!me?.couple,
+    enabled: me?.couple?.status === 'active',
     retry: false,
   })
 
@@ -169,6 +170,34 @@ export const AIChatPage = () => {
 
   const score = latestAnalytics ? Math.round(latestAnalytics.overall_score) : null
 
+  /* ── Pending couple ──────────────────────────────────────────────── */
+  if (me?.couple?.status === 'pending') {
+    return (
+      <div className="min-h-full bg-surface pb-24 md:pb-8">
+        <div className="page-hero px-5 pt-6 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand shadow-[0_4px_12px_rgba(60,56,136,0.28)]">
+              <MessageCircle size={16} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-ink">{t('title')}</h1>
+              <p className="text-xs text-muted mt-0.5">{t('subtitle')}</p>
+            </div>
+          </div>
+        </div>
+        <div className="px-4 pt-4">
+          <EmptyState
+            icon={<MessageCircle />}
+            title={t('common:pending_couple_title')}
+            description={t('common:invite_partner_first')}
+            actionLabel={t('common:invite_partner_btn')}
+            onAction={() => navigate('/app/couple')}
+          />
+        </div>
+      </div>
+    )
+  }
+
   /* ── No couple ───────────────────────────────────────────────────── */
   if (!me?.couple) {
     return (
@@ -178,7 +207,10 @@ export const AIChatPage = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand shadow-[0_4px_12px_rgba(60,56,136,0.28)]">
               <MessageCircle size={16} className="text-white" />
             </div>
-            <h1 className="text-xl font-bold text-ink">{t('title')}</h1>
+            <div>
+              <h1 className="text-xl font-bold text-ink">{t('title')}</h1>
+              <p className="text-xs text-muted mt-0.5">{t('subtitle')}</p>
+            </div>
           </div>
         </div>
         <div className="px-4 pt-4">
@@ -283,13 +315,13 @@ export const AIChatPage = () => {
                       },
                     })
                   }}
-                  className="flex items-start gap-2.5 rounded-[18px] bg-canvas p-4 text-left border border-sand/60 transition-all duration-150 hover:border-primary-100 hover:shadow-hover hover:-translate-y-0.5"
+                  className="flex flex-col gap-2 rounded-[18px] bg-canvas p-4 text-left border border-sand/60 transition-all duration-150 hover:border-primary-100 hover:shadow-hover hover:-translate-y-0.5"
                   style={{ boxShadow: '0 1px 3px rgba(23,21,42,0.04)' }}
                 >
-                  <span className="text-xl mt-0.5">{topic.emoji}</span>
+                  <span className="text-xl">{topic.emoji}</span>
                   <div>
-                    <p className="text-sm font-bold text-ink">{topic.label}</p>
-                    <p className="text-xs text-muted mt-0.5 leading-snug">{topic.prompt}</p>
+                    <p className="text-sm font-bold text-ink leading-snug">{topic.label}</p>
+                    <p className="text-xs text-muted mt-0.5 leading-snug line-clamp-2">{topic.prompt}</p>
                   </div>
                 </motion.button>
               ))}

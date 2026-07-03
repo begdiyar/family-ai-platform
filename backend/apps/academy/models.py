@@ -299,6 +299,7 @@ class Achievement(BaseModel):
     icon = models.CharField(max_length=10)
     condition_type = models.CharField(max_length=50, choices=CONDITION_CHOICES)
     condition_value = models.IntegerField()
+    i18n = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = 'academy_achievements'

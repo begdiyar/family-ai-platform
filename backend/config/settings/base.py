@@ -36,12 +36,14 @@ LOCAL_APPS = [
     'apps.diagnostics',
     'apps.analytics',
     'apps.ai_consultant',
+    'apps.ai',
     'apps.plans',
     'apps.reports',
     'apps.mediation',
     'apps.constitution',
     'apps.practices',
     'apps.academy',
+    'apps.admin_panel',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -162,8 +164,9 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@diplom.local')
 
 # AI
-AI_PROVIDER = env('AI_PROVIDER', default='openai')
+AI_PROVIDER    = env('AI_PROVIDER',   default='openai')
 OPENAI_API_KEY = env('OPENAI_API_KEY', default='')
+OPENAI_MODEL   = env('OPENAI_MODEL',   default='gpt-4o-mini')
 
 # Frontend
 FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')

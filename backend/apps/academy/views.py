@@ -281,7 +281,8 @@ class RecommendationsView(APIView):
 class AchievementsView(APIView):
     def get(self, request):
         user_achievements = AchievementRepository.get_user_achievements(request.user)
-        serializer = UserAchievementSerializer(user_achievements, many=True)
+        lang = get_request_language(request)
+        serializer = UserAchievementSerializer(user_achievements, many=True, context={'language': lang})
         return Response({'count': len(serializer.data), 'results': serializer.data})
 
 

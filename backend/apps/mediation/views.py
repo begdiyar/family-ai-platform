@@ -9,9 +9,8 @@ from .services import MediationService
 
 class ConflictSessionListView(APIView):
     def get(self, request):
-        couple = request.user.get_active_couple()
-        if not couple:
-            return Response([])
+        from apps.couples.repositories import CoupleRepository
+        couple = CoupleRepository.require_full_couple(request.user)
         sessions = ConflictSession.objects.filter(couple=couple).order_by('-created_at')[:20]
         return Response(ConflictSessionSerializer(sessions, many=True, context={'user': request.user}).data)
 

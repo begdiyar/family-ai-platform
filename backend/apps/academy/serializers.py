@@ -318,13 +318,28 @@ class LearningProgressSerializer(serializers.Serializer):
 
 
 class AchievementSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+
+    def _lang(self):
+        return self.context.get('language', 'ru')
+
+    def get_title(self, obj):
+        return get_i18n(obj, 'title', self._lang())
+
+    def get_description(self, obj):
+        return get_i18n(obj, 'description', self._lang())
+
     class Meta:
         model = Achievement
         fields = ['id', 'key', 'title', 'description', 'icon', 'condition_type', 'condition_value']
 
 
 class UserAchievementSerializer(serializers.ModelSerializer):
-    achievement = AchievementSerializer(read_only=True)
+    achievement = serializers.SerializerMethodField()
+
+    def get_achievement(self, obj):
+        return AchievementSerializer(obj.achievement, context=self.context).data
 
     class Meta:
         model = UserAchievement

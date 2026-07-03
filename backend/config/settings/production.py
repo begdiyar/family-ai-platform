@@ -3,7 +3,10 @@ import sentry_sdk
 
 DEBUG = False
 
-CORS_ALLOWED_ORIGINS = [env('FRONTEND_URL')]
+CORS_ALLOWED_ORIGINS = [
+    'https://oila-ai.uz',
+    'https://www.oila-ai.uz',
+]
 CORS_ALLOW_CREDENTIALS = True
 
 SECURE_BROWSER_XSS_FILTER = True

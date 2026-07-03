@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { AuthService } from '@/services/auth.service'
@@ -13,7 +12,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
-type Form = { email: string; password: string }
+type Form = { phone: string; password: string }
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
@@ -24,7 +23,7 @@ export const LoginPage = () => {
   const { t } = useTranslation('auth')
 
   const schema = z.object({
-    email: z.string().email(t('login.validation_email')),
+    phone: z.string().min(1, t('login.validation_phone')),
     password: z.string().min(1, t('login.validation_password')),
   })
 
@@ -34,9 +33,13 @@ export const LoginPage = () => {
     mutationFn: AuthService.login,
     onSuccess: ({ user, tokens }) => {
       setAuth(user, tokens)
-      const next = searchParams.get('next')
-      const target = next && next.startsWith('/') && !next.startsWith('//') ? next : '/app'
-      navigate(target)
+      if (user.is_staff || user.is_superuser) {
+        navigate('/admin', { replace: true })
+      } else {
+        const next = searchParams.get('next')
+        const target = next && next.startsWith('/') && !next.startsWith('//') ? next : '/app'
+        navigate(target, { replace: true })
+      }
     },
     onError: () => toast.error(t('login.error_credentials')),
   })
@@ -69,10 +72,10 @@ export const LoginPage = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.1, ease }}
-              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-brand"
+              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-brand overflow-hidden"
               style={{ boxShadow: '0 8px 24px rgba(60,56,136,0.38)' }}
             >
-              <Sparkles size={26} className="text-white" />
+              <img src="/favicon.png" alt="Oila AI" className="w-full h-full object-cover" />
             </motion.div>
             <div className="text-center">
               <h1 className="text-2xl font-bold text-ink">{t('login.title')}</h1>
@@ -82,11 +85,12 @@ export const LoginPage = () => {
 
           <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="flex flex-col gap-4">
             <Input
-              label={t('login.email_label')}
-              type="email"
-              placeholder="you@email.com"
-              error={errors.email?.message}
-              {...register('email')}
+              label={t('login.phone_label')}
+              type="text"
+              autoComplete="username"
+              placeholder={t('login.phone_placeholder')}
+              error={errors.phone?.message}
+              {...register('phone')}
             />
             <Input
               label={t('login.password_label')}

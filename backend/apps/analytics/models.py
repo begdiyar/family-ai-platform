@@ -50,6 +50,27 @@ class AnalyticsResult(BaseModel):
         return self.crisis_level in (self.CRISIS_WARNING, self.CRISIS_CRITICAL)
 
 
+class AnalyticsInsight(BaseModel):
+    analytics_result = models.OneToOneField(
+        AnalyticsResult,
+        on_delete=models.CASCADE,
+        related_name='insight',
+    )
+    # Each field stores {"ru": "...", "en": "...", "uz": "..."} — serializer unwraps by user language
+    strengths_summary = models.JSONField(default=dict)
+    growth_summary    = models.JSONField(default=dict)
+    attention_summary = models.JSONField(default=dict)
+    ai_analysis       = models.JSONField(default=dict)
+    recommendation    = models.JSONField(default=dict)
+    next_focus        = models.JSONField(default=dict)
+
+    class Meta:
+        db_table = 'analytics_insights'
+
+    def __str__(self):
+        return f"Insight(result={self.analytics_result_id})"
+
+
 class ZoneScore(BaseModel):
     ZONE_CHOICES = [
         ('communication', 'Коммуникация'),
@@ -57,6 +78,8 @@ class ZoneScore(BaseModel):
         ('intimacy', 'Близость'),
         ('conflict', 'Конфликты'),
         ('values', 'Ценности'),
+        ('finance', 'Финансы'),
+        ('relatives', 'Родственники'),
         ('future', 'Будущее'),
     ]
 

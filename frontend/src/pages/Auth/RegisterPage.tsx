@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
-type Form = { first_name: string; email: string; password: string }
+type Form = { first_name: string; phone: string; password: string }
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
@@ -25,7 +25,7 @@ export const RegisterPage = () => {
 
   const schema = z.object({
     first_name: z.string().min(2, t('register.validation_name')),
-    email: z.string().email(t('register.validation_email')),
+    phone: z.string().regex(/^(\+?998)?\d{9}$/, t('register.validation_phone')),
     password: z.string().min(8, t('register.validation_password')),
   })
 
@@ -74,10 +74,10 @@ export const RegisterPage = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.1, ease }}
-              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-brand"
+              className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-brand overflow-hidden"
               style={{ boxShadow: '0 8px 24px rgba(60,56,136,0.38)' }}
             >
-              <Sparkles size={26} className="text-white" />
+              <img src="/favicon.png" alt="Oila AI" className="w-full h-full object-cover" />
             </motion.div>
             <div className="text-center">
               <h1 className="text-2xl font-bold text-ink">{t('register.title')}</h1>
@@ -93,11 +93,11 @@ export const RegisterPage = () => {
               {...register('first_name')}
             />
             <Input
-              label={t('register.email_label')}
-              type="email"
-              placeholder="you@email.com"
-              error={errors.email?.message}
-              {...register('email')}
+              label={t('register.phone_label')}
+              type="tel"
+              placeholder={t('register.phone_placeholder')}
+              error={errors.phone?.message}
+              {...register('phone')}
             />
             <Input
               label={t('register.password_label')}

@@ -3,19 +3,35 @@ from shared.models import BaseModel
 
 
 class AIConversation(BaseModel):
-    couple = models.ForeignKey('couples.Couple', on_delete=models.CASCADE, related_name='ai_conversations')
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='ai_conversations')
-    title = models.CharField(max_length=200, null=True, blank=True)
+    DIALOG_CHAT     = 'chat'
+    DIALOG_COACH    = 'coach'
+    DIALOG_MEDIATOR = 'mediator'
+    DIALOG_TYPES = [
+        (DIALOG_CHAT,     'Чат-консультант'),
+        (DIALOG_COACH,    'Коуч'),
+        (DIALOG_MEDIATOR, 'Медиатор'),
+    ]
+
+    couple      = models.ForeignKey(
+        'couples.Couple',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='ai_conversations',
+    )
+    user        = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='ai_conversations')
+    dialog_type = models.CharField(max_length=20, choices=DIALOG_TYPES, default=DIALOG_CHAT)
+    title       = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         db_table = 'ai_conversations'
         indexes = [
             models.Index(fields=['user', '-updated_at']),
             models.Index(fields=['couple', 'user']),
+            models.Index(fields=['dialog_type', 'user']),
         ]
 
     def __str__(self):
-        return f"Conv({self.user.first_name}, {self.title or 'без названия'})"
+        return f"Conv({self.user.first_name}, {self.dialog_type}, {self.title or 'без названия'})"
 
 
 class AIMessage(BaseModel):

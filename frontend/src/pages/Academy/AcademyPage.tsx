@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Brain, BookOpen, Zap, Target, ChevronRight,
@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { AcademyService } from '@/services/academy.service'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { celebrateSmall, celebrateMedium } from '@/lib/confetti'
 import type { AcademyCategory, AcademyArticle, AcademyTraining, AcademyProgram } from '@/types/domain.types'
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
@@ -174,7 +175,7 @@ function CourseCard({ program, onClick }: { program: AcademyProgram; onClick: ()
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-function HomeTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
+function HomeTab({ navigate, onCategoryClick }: { navigate: ReturnType<typeof useNavigate>; onCategoryClick: (cat: AcademyCategory) => void }) {
   const qc = useQueryClient()
   const { t, i18n } = useTranslation('academy')
   const lang = i18n.language
@@ -188,6 +189,7 @@ function HomeTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
     mutationFn: (id: string) => AcademyService.completeMicroPractice(id),
     onSuccess: () => {
       toast.success(t('micro_toast_done'))
+      celebrateSmall()
       qc.invalidateQueries({ queryKey: ['academy-micro-today'] })
       qc.invalidateQueries({ queryKey: ['academy-progress'] })
     },
@@ -340,7 +342,7 @@ function HomeTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
             return (
               <button
                 key={key}
-                onClick={() => navigate(`/app/academy?tab=articles&category=${key}`)}
+                onClick={() => onCategoryClick(key)}
                 className="flex items-center gap-2.5 rounded-[16px] bg-canvas p-3 text-left transition-all hover:shadow-sm"
                 style={{ border: '1px solid rgba(232,227,218,0.6)' }}
               >
@@ -355,8 +357,8 @@ function HomeTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
   )
 }
 
-function ArticlesTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
-  const [activeCategory, setActiveCategory] = useState<AcademyCategory | ''>('')
+function ArticlesTab({ navigate, initialCategory }: { navigate: ReturnType<typeof useNavigate>; initialCategory?: AcademyCategory | '' }) {
+  const [activeCategory, setActiveCategory] = useState<AcademyCategory | ''>(initialCategory ?? '')
   const { t, i18n } = useTranslation('academy')
   const lang = i18n.language
 
@@ -521,8 +523,17 @@ function CoursesTab({ navigate }: { navigate: ReturnType<typeof useNavigate> }) 
 
 export const AcademyPage = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<Tab>('home')
+  const [searchParams] = useSearchParams()
+  const initialTab = (searchParams.get('tab') as Tab) || 'home'
+  const initialCategory = (searchParams.get('category') as AcademyCategory) || ''
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+  const [activeCategory, setActiveCategory] = useState<AcademyCategory | ''>(initialCategory)
   const { t } = useTranslation('academy')
+
+  const handleCategoryClick = (cat: AcademyCategory) => {
+    setActiveCategory(cat)
+    setActiveTab('articles')
+  }
 
   const TABS: { id: Tab; label: string; icon: typeof BookOpen }[] = [
     { id: 'home',     label: t('tab_home'),     icon: Brain },
@@ -575,8 +586,8 @@ export const AcademyPage = () => {
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease }}
           >
-            {activeTab === 'home'     && <HomeTab navigate={navigate} />}
-            {activeTab === 'articles' && <ArticlesTab navigate={navigate} />}
+            {activeTab === 'home'     && <HomeTab navigate={navigate} onCategoryClick={handleCategoryClick} />}
+            {activeTab === 'articles' && <ArticlesTab navigate={navigate} initialCategory={activeCategory} />}
             {activeTab === 'skills'   && <SkillsTab navigate={navigate} />}
             {activeTab === 'courses'  && <CoursesTab navigate={navigate} />}
           </motion.div>

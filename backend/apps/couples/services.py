@@ -1,11 +1,14 @@
+import logging
 from django.conf import settings
-from django.db import transaction
+from django.db import models as django_models, transaction
 
 from shared.exceptions import BusinessLogicError, NotFoundError
 from shared.utils import generate_token, future_datetime
 from apps.users.models import User
 from .models import Couple, CoupleInvite
 from .repositories import CoupleRepository, InviteRepository
+
+logger = logging.getLogger(__name__)
 
 
 class InviteService:
@@ -52,10 +55,23 @@ class CoupleService:
                 raise NotFoundError('INVITE_NOT_FOUND', 'Приглашение не найдено или истекло')
             if str(invite.couple.partner_a_id) == str(user.id):
                 raise BusinessLogicError('CANNOT_ACCEPT_OWN_INVITE', 'Нельзя принять собственное приглашение')
-            if CoupleRepository.has_active_couple(user):
+            if Couple.objects.filter(
+                django_models.Q(partner_a=user) | django_models.Q(partner_b=user),
+                status=Couple.STATUS_ACTIVE,
+            ).exists():
                 raise BusinessLogicError('ALREADY_IN_COUPLE', 'Вы уже состоите в паре')
+            # Drop any pending couple the user created (not yet connected with anyone)
+            Couple.objects.filter(partner_a=user, status=Couple.STATUS_PENDING).delete()
             couple = CoupleRepository.activate(invite.couple, partner_b=user)
             InviteRepository.accept(invite)
+
+        # Создаём FamilyJourney и разблокируем уровень 1
+        try:
+            from apps.diagnostics.repositories import JourneyRepository
+            JourneyRepository.get_or_create(couple)
+        except Exception:
+            logger.warning("Failed to create FamilyJourney for couple %s", couple.id, exc_info=True)
+
         return couple
 
     @staticmethod
