@@ -24,7 +24,7 @@ const TRUST = [Shield, Globe, Heart]
 
 export const LandingPage = () => {
   const { t } = useTranslation('landing')
-  const token = useAuthStore((s) => s.tokens?.access)
+  const token = useAuthStore((s) => s.accessToken)
 
   if (token) return <Navigate to="/app" replace />
 
