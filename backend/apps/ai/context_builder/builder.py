@@ -177,7 +177,8 @@ class ContextBuilder:
             ctx.crisis_level = result.crisis_level or 'none'
             ctx.bridge_analysis = result.bridge_analysis
             ctx.strengths = result.strengths_summary
-            ctx.problem_chain = result.problem_chain or []
+            raw_chain = result.problem_chain
+            ctx.problem_chain = raw_chain if isinstance(raw_chain, list) else []
 
             zones = AnalyticsService.get_zone_detail_for_result(result)
             ctx.zones = zones
