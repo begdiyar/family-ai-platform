@@ -186,7 +186,7 @@ class AIConsultantService:
             if strengths:
                 prompt += f" Конкретно: {', '.join(strengths[:3])}."
 
-        if ctx.problem_chain:
+        if isinstance(ctx.problem_chain, list) and ctx.problem_chain:
             root = ctx.problem_chain[0]
             prompt += f"\n\nКорневая проблема по данным диагностики: {root.get('problem', '')}."
 
