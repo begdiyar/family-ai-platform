@@ -19,11 +19,13 @@ export const AIService = {
     signal?: AbortSignal,
   ) => {
     const token = useAuthStore.getState().accessToken
-    const response = await fetch(`/api/v1/ai/conversations/${convId}/messages/send/`, {
+    const baseUrl = import.meta.env.VITE_API_URL || '/api/v1'
+    const response = await fetch(`${baseUrl}/ai/conversations/${convId}/messages/send/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Language': localStorage.getItem('lang') || 'ru',
       },
       body: JSON.stringify({ content }),
       signal,
